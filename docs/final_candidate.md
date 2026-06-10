@@ -31,7 +31,7 @@ std_reward: 24.244
 min_reward: 6753.711
 max_reward: 6817.721
 mean_length: 1000.0
-seed_123_reward: 6780.809
+seed_3407_reward: 6770.456
 ```
 
 Checkpoint sweep:
@@ -50,7 +50,7 @@ Commands:
 
 ```bash
 python evaluate.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seeds 0 1 2 3 4 5 6 7 8 9 --episodes-per-seed 1 --device cpu
-python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 3407 --episodes 1 --device cpu
 ```
 
 Previous candidate:

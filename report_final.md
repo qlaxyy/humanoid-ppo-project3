@@ -198,16 +198,16 @@ mean_length: 1000.0
 
 ### 6.3 固定 seed 单次测试
 
-另外使用固定 `seed=123` 进行单次测试，便于视频和截图展示：
+另外使用与训练一致的固定 `seed=3407` 进行单次测试，便于视频和截图展示：
 
 ```bat
-python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 3407 --episodes 1 --device cpu
 ```
 
 结果如下：
 
 ```text
-raw_reward: 6780.809
+raw_reward: 6770.456
 length: 1000
 terminated: False
 truncated: True
@@ -226,7 +226,7 @@ truncated: True
 在本地 Windows 环境中可使用 `glfw` 后端：
 
 ```bat
-python record_video.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --backend glfw --fps 20
+python record_video.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 3407 --episodes 1 --device cpu --backend glfw --fps 20
 ```
 
 视频保存目录：
@@ -240,7 +240,7 @@ runs/local_sac_cpu_5m_seed3407/videos/
 如果直接渲染遇到 MuJoCo/OpenGL 后端问题，可以先导出动作轨迹，再单独渲染：
 
 ```bat
-python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 3407 --episodes 1 --device cpu
 ```
 
 ```bat
@@ -259,7 +259,7 @@ runs/local_sac_cpu_5m_seed3407/trajectories/videos/
 
 SAC 的早期训练波动较大，但随着训练继续，策略逐渐学会稳定步态。训练中也观察到 checkpoint 表现并非严格随步数单调提升，因此使用 checkpoint sweep 选择最终模型是必要的。本次最终本地训练中，5,000,000 步 checkpoint 在初筛和正式测试中均表现最好。
 
-最终模型在 10 个不同测试 seed 下均达到 `mean_length=1000.0`，说明策略不是只对单个 seed 有效，而是在不同初始条件下都能稳定走完整个 episode。最终 10-seed mean reward 为 `6780.676`，固定 seed=123 raw reward 为 `6780.809`。
+最终模型在 10 个不同测试 seed 下均达到 `mean_length=1000.0`，说明策略不是只对单个 seed 有效，而是在不同初始条件下都能稳定走完整个 episode。最终 10-seed mean reward 为 `6780.676`，固定 seed=3407 raw reward 为 `6770.456`。
 
 ## 9. 提交材料
 

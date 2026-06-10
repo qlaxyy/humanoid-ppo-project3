@@ -12,7 +12,7 @@ runs/local_sac_cpu_5m_seed3407/models/checkpoint_model_5000000_steps.zip
 
 ```text
 10-seed mean_reward=6780.676
-seed=123 raw_reward=6780.809
+seed=3407 raw_reward=6770.456
 mean_length=1000.0
 ```
 
@@ -80,16 +80,16 @@ std_reward=24.244
 mean_length=1000.0
 ```
 
-### 2.3 固定 seed=123 单次测试
+### 2.3 固定 seed=3407 单次测试
 
 ```bat
-python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 3407 --episodes 1 --device cpu
 ```
 
 结果：
 
 ```text
-raw_reward=6780.809
+raw_reward=6770.456
 length=1000
 ```
 
@@ -100,7 +100,7 @@ length=1000
 在本地 Windows 环境中使用 `glfw` 后端：
 
 ```bat
-python record_video.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --backend glfw --fps 20
+python record_video.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 3407 --episodes 1 --device cpu --backend glfw --fps 20
 ```
 
 视频保存目录：
@@ -114,7 +114,7 @@ runs/local_sac_cpu_5m_seed3407/videos/
 如果直接录制遇到 MuJoCo/OpenGL 后端问题，使用以下两步：
 
 ```bat
-python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 3407 --episodes 1 --device cpu
 ```
 
 ```bat

@@ -26,13 +26,13 @@ mean_length: 1000.0
 3. Fixed-seed test:
 
 ```bash
-python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 3407 --episodes 1 --device cpu
 ```
 
 Expected key result:
 
 ```text
-seed=123 raw_reward=6780.809 length=1000
+seed=3407 raw_reward=6770.456 length=1000
 ```
 
 4. Final policy file:
@@ -64,7 +64,7 @@ dir runs\local_sac_cpu_5m_seed3407\models\checkpoint_model_5000000_steps.zip
 
 ```bash
 python evaluate.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seeds 0 1 2 3 4 5 6 7 8 9 --episodes-per-seed 1 --device cpu
-python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 3407 --episodes 1 --device cpu
 ```
 
 4. Optional policy walking video, about 1-2 minutes.
@@ -81,7 +81,7 @@ or raw reward evaluation.
 Generate a final trajectory:
 
 ```bash
-python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 3407 --episodes 1 --device cpu
 ```
 
 Render latest trajectory:

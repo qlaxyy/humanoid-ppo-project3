@@ -13,6 +13,7 @@ from docx.shared import Inches, Pt, RGBColor
 ROOT = Path(__file__).resolve().parent
 MARKDOWN_PATH = ROOT / "report_final.md"
 OUTPUT_PATH = ROOT / "report_final.docx"
+CHINESE_FONT = "SimSun"
 
 
 def set_east_asia_font(run, font_name: str) -> None:
@@ -41,13 +42,13 @@ def add_inline_markdown(paragraph, text: str, *, bold: bool = False) -> None:
         if not part:
             continue
         run = paragraph.add_run(part[1:-1] if part.startswith("`") and part.endswith("`") else part)
-        set_east_asia_font(run, "Microsoft YaHei")
+        set_east_asia_font(run, CHINESE_FONT)
         run.bold = bold
         if part.startswith("`") and part.endswith("`"):
             run.font.name = "Consolas"
             run._element.rPr.rFonts.set(qn("w:eastAsia"), "Consolas")
             run.font.size = Pt(9.5)
-            run.font.color.rgb = RGBColor(40, 40, 40)
+            run.font.color.rgb = RGBColor(0, 0, 0)
 
 
 def configure_styles(document: Document) -> None:
@@ -58,20 +59,20 @@ def configure_styles(document: Document) -> None:
     section.right_margin = Inches(0.9)
 
     normal = document.styles["Normal"]
-    normal.font.name = "Microsoft YaHei"
-    normal._element.rPr.rFonts.set(qn("w:eastAsia"), "Microsoft YaHei")
+    normal.font.name = CHINESE_FONT
+    normal._element.rPr.rFonts.set(qn("w:eastAsia"), CHINESE_FONT)
     normal.font.size = Pt(10.5)
     normal.paragraph_format.space_after = Pt(5)
     normal.paragraph_format.line_spacing = 1.15
 
     for style_name, size, color, before, after in [
-        ("Heading 1", 16, "1F4E79", 14, 7),
-        ("Heading 2", 13, "2E74B5", 10, 5),
-        ("Heading 3", 11.5, "1F4E79", 7, 4),
+        ("Heading 1", 16, "000000", 14, 7),
+        ("Heading 2", 13, "000000", 10, 5),
+        ("Heading 3", 11.5, "000000", 7, 4),
     ]:
         style = document.styles[style_name]
-        style.font.name = "Microsoft YaHei"
-        style._element.rPr.rFonts.set(qn("w:eastAsia"), "Microsoft YaHei")
+        style.font.name = CHINESE_FONT
+        style._element.rPr.rFonts.set(qn("w:eastAsia"), CHINESE_FONT)
         style.font.size = Pt(size)
         style.font.bold = True
         style.font.color.rgb = RGBColor.from_string(color)
@@ -93,18 +94,18 @@ def add_title_block(document: Document, title: str) -> None:
     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     paragraph.paragraph_format.space_after = Pt(4)
     run = paragraph.add_run(title)
-    set_east_asia_font(run, "Microsoft YaHei")
+    set_east_asia_font(run, CHINESE_FONT)
     run.font.size = Pt(20)
     run.font.bold = True
-    run.font.color.rgb = RGBColor(31, 78, 121)
+    run.font.color.rgb = RGBColor(0, 0, 0)
 
     meta = document.add_paragraph()
     meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
     meta.paragraph_format.space_after = Pt(12)
     run = meta.add_run("Humanoid-v5 强化学习训练与评估")
-    set_east_asia_font(run, "Microsoft YaHei")
+    set_east_asia_font(run, CHINESE_FONT)
     run.font.size = Pt(10.5)
-    run.font.color.rgb = RGBColor(90, 90, 90)
+    run.font.color.rgb = RGBColor(0, 0, 0)
 
 
 def build_docx() -> None:
@@ -142,9 +143,9 @@ def build_docx() -> None:
             cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
             cap.paragraph_format.space_after = Pt(8)
             run = cap.add_run(caption)
-            set_east_asia_font(run, "Microsoft YaHei")
+            set_east_asia_font(run, CHINESE_FONT)
             run.font.size = Pt(9)
-            run.font.color.rgb = RGBColor(80, 80, 80)
+            run.font.color.rgb = RGBColor(0, 0, 0)
             continue
 
         stripped = line.strip()
@@ -176,16 +177,16 @@ def build_docx() -> None:
     table = document.add_table(rows=2, cols=4)
     table.style = "Table Grid"
     table.autofit = False
-    headers = ["最终 checkpoint", "10-seed mean reward", "seed=123 reward", "episode length"]
-    values = ["5,000,000 steps", "6780.676", "6780.809", "1000"]
+    headers = ["最终 checkpoint", "10-seed mean reward", "seed=3407 reward", "episode length"]
+    values = ["5,000,000 steps", "6780.676", "6770.456", "1000"]
     for cell, value in zip(table.rows[0].cells, headers):
         set_cell_shading(cell, "F2F4F7")
         run = cell.paragraphs[0].add_run(value)
-        set_east_asia_font(run, "Microsoft YaHei")
+        set_east_asia_font(run, CHINESE_FONT)
         run.bold = True
     for cell, value in zip(table.rows[1].cells, values):
         run = cell.paragraphs[0].add_run(value)
-        set_east_asia_font(run, "Microsoft YaHei")
+        set_east_asia_font(run, CHINESE_FONT)
 
     document.save(OUTPUT_PATH)
     print(f"Saved DOCX: {OUTPUT_PATH}")
