@@ -7,7 +7,7 @@ from typing import Any
 
 import gymnasium as gym
 import numpy as np
-from stable_baselines3 import PPO
+from stable_baselines3.common.base_class import BaseAlgorithm
 
 
 @dataclass
@@ -41,7 +41,7 @@ def normalize_observation(normalizer: Any, obs: np.ndarray) -> np.ndarray:
 
 
 def run_raw_reward_episodes(
-    model: PPO,
+    model: BaseAlgorithm,
     env_id: str,
     normalizer: Any,
     seed: int,
@@ -101,4 +101,3 @@ def summarize_results(results: list[EpisodeResult]) -> dict[str, float | int]:
         "max_reward": float(np.max(rewards)),
         "mean_length": float(np.mean(lengths)),
     }
-

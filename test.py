@@ -3,12 +3,11 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from stable_baselines3 import PPO
-
 from humanoid_rl import ASSIGNMENT_ENV_ID
 from humanoid_rl.artifacts import checkpoint_artifacts
 from humanoid_rl.config import load_config
 from humanoid_rl.evaluation import load_vecnormalize_for_inference, run_raw_reward_episodes
+from humanoid_rl.models import load_model_for_config
 
 
 def parse_args() -> argparse.Namespace:
@@ -39,21 +38,29 @@ def main() -> int:
                 "--checkpoint-step cannot be combined with --model-path or "
                 "--vecnormalize-path."
             )
-        model_path, vecnormalize_path = checkpoint_artifacts(args.run_dir, args.checkpoint_step)
+        model_path, vecnormalize_path = checkpoint_artifacts(
+            args.run_dir,
+            args.checkpoint_step,
+            require_vecnormalize=bool(config["normalize_observation"]),
+        )
     else:
         model_path = args.model_path or args.run_dir / "models" / "latest_model.zip"
         vecnormalize_path = args.vecnormalize_path or args.run_dir / "models" / "vecnormalize_latest.pkl"
 
     if not model_path.exists():
         raise FileNotFoundError(f"Model not found: {model_path}")
-    if bool(config["normalize_observation"]) and not vecnormalize_path.exists():
+    if bool(config["normalize_observation"]) and (
+        vecnormalize_path is None or not vecnormalize_path.exists()
+    ):
         raise FileNotFoundError(
             "VecNormalize statistics are required for normalized-observation inference: "
             f"{vecnormalize_path}"
         )
 
-    model = PPO.load(str(model_path), device=args.device)
-    normalizer = load_vecnormalize_for_inference(vecnormalize_path if vecnormalize_path.exists() else None)
+    model = load_model_for_config(model_path, config, device=args.device)
+    normalizer = load_vecnormalize_for_inference(
+        vecnormalize_path if vecnormalize_path is not None and vecnormalize_path.exists() else None
+    )
     render_mode = None if args.render_mode == "none" else args.render_mode
     env_id = config.get("env_id", ASSIGNMENT_ENV_ID)
 

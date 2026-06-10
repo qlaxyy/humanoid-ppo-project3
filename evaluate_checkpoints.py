@@ -8,8 +8,6 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from stable_baselines3 import PPO
-
 from humanoid_rl import ASSIGNMENT_ENV_ID
 from humanoid_rl.config import load_config
 from humanoid_rl.evaluation import (
@@ -18,6 +16,7 @@ from humanoid_rl.evaluation import (
     summarize_results,
 )
 from humanoid_rl.io import timestamp_for_path
+from humanoid_rl.models import load_model_for_config
 
 
 def parse_args() -> argparse.Namespace:
@@ -97,13 +96,13 @@ def main() -> int:
     for checkpoint_path in checkpoints:
         step = checkpoint_step(checkpoint_path)
         vecnormalize_path = find_vecnormalize(models_dir, step)
-        if vecnormalize_path is None:
+        if bool(config["normalize_observation"]) and vecnormalize_path is None:
             raise FileNotFoundError(
                 f"Missing VecNormalize statistics for checkpoint step {step}."
             )
 
         print(f"\nEvaluating step {step}: {checkpoint_path.name}")
-        model = PPO.load(str(checkpoint_path), device=args.device)
+        model = load_model_for_config(checkpoint_path, config, device=args.device)
         normalizer = load_vecnormalize_for_inference(vecnormalize_path)
 
         episode_results = []
@@ -196,4 +195,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

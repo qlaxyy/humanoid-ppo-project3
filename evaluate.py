@@ -6,8 +6,6 @@ from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
-from stable_baselines3 import PPO
-
 from humanoid_rl import ASSIGNMENT_ENV_ID
 from humanoid_rl.artifacts import checkpoint_artifacts
 from humanoid_rl.config import load_config
@@ -17,6 +15,7 @@ from humanoid_rl.evaluation import (
     summarize_results,
 )
 from humanoid_rl.io import timestamp_for_path, write_json
+from humanoid_rl.models import load_model_for_config
 
 
 def parse_args() -> argparse.Namespace:
@@ -46,13 +45,19 @@ def main() -> int:
                 "--checkpoint-step cannot be combined with --model-path or "
                 "--vecnormalize-path."
             )
-        model_path, vecnormalize_path = checkpoint_artifacts(run_dir, args.checkpoint_step)
+        model_path, vecnormalize_path = checkpoint_artifacts(
+            run_dir,
+            args.checkpoint_step,
+            require_vecnormalize=bool(config["normalize_observation"]),
+        )
     else:
         model_path = args.model_path or run_dir / "models" / "latest_model.zip"
         vecnormalize_path = args.vecnormalize_path or run_dir / "models" / "vecnormalize_latest.pkl"
     if not model_path.exists():
         raise FileNotFoundError(f"Model not found: {model_path}")
-    if bool(config["normalize_observation"]) and not vecnormalize_path.exists():
+    if bool(config["normalize_observation"]) and (
+        vecnormalize_path is None or not vecnormalize_path.exists()
+    ):
         if not args.allow_missing_vecnormalize:
             raise FileNotFoundError(
                 "VecNormalize statistics are required because training normalized "
@@ -60,7 +65,7 @@ def main() -> int:
             )
         vecnormalize_path = None
 
-    model = PPO.load(str(model_path), device=args.device)
+    model = load_model_for_config(model_path, config, device=args.device)
     normalizer = load_vecnormalize_for_inference(vecnormalize_path)
 
     all_results = []

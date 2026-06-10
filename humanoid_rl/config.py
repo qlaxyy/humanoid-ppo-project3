@@ -9,6 +9,7 @@ from humanoid_rl import ASSIGNMENT_ENV_ID, MAX_ENV_STEPS
 
 
 DEFAULT_CONFIG: dict[str, Any] = {
+    "algorithm": "ppo",
     "env_id": ASSIGNMENT_ENV_ID,
     "seed": 3407,
     "target_steps": 1_000_000,
@@ -43,6 +44,23 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "log_std_init": None,
         "policy_net_arch": [256, 256],
         "value_net_arch": [256, 256],
+    },
+    "sac": {
+        "policy": "MlpPolicy",
+        "learning_rate": 3e-4,
+        "buffer_size": 1_000_000,
+        "learning_starts": 10_000,
+        "batch_size": 256,
+        "tau": 0.005,
+        "gamma": 0.99,
+        "train_freq": 1,
+        "gradient_steps": 1,
+        "ent_coef": "auto",
+        "target_update_interval": 1,
+        "target_entropy": "auto",
+        "use_sde": False,
+        "policy_net_arch": [256, 256],
+        "qf_net_arch": [256, 256],
     },
 }
 
@@ -96,24 +114,34 @@ def validate_config(config: dict[str, Any]) -> list[str]:
     if n_envs < 1:
         raise ValueError("n_envs must be at least 1.")
 
-    ppo = config["ppo"]
-    rollout_size = int(ppo["n_steps"]) * n_envs
-    batch_size = int(ppo["batch_size"])
-    if batch_size > rollout_size:
-        raise ValueError(
-            f"batch_size={batch_size} is larger than rollout_size={rollout_size}."
-        )
-    if rollout_size % batch_size != 0:
-        warnings.append(
-            "PPO rollout_size is not divisible by batch_size; "
-            "Stable-Baselines3 will use a truncated final minibatch."
-        )
-    if target_steps % rollout_size != 0:
-        raise ValueError(
-            f"target_steps={target_steps} is not divisible by PPO rollout_size="
-            f"n_steps*n_envs={rollout_size}. This could make PPO overshoot the "
-            "assignment step limit. Adjust target_steps, n_steps, or n_envs."
-        )
+    algorithm = str(config.get("algorithm", "ppo")).lower()
+    if algorithm == "ppo":
+        ppo = config["ppo"]
+        rollout_size = int(ppo["n_steps"]) * n_envs
+        batch_size = int(ppo["batch_size"])
+        if batch_size > rollout_size:
+            raise ValueError(
+                f"batch_size={batch_size} is larger than rollout_size={rollout_size}."
+            )
+        if rollout_size % batch_size != 0:
+            warnings.append(
+                "PPO rollout_size is not divisible by batch_size; "
+                "Stable-Baselines3 will use a truncated final minibatch."
+            )
+        if target_steps % rollout_size != 0:
+            raise ValueError(
+                f"target_steps={target_steps} is not divisible by PPO rollout_size="
+                f"n_steps*n_envs={rollout_size}. This could make PPO overshoot the "
+                "assignment step limit. Adjust target_steps, n_steps, or n_envs."
+            )
+    elif algorithm == "sac":
+        if n_envs != 1:
+            warnings.append(
+                "SAC is configured most conservatively with n_envs=1. Vectorized "
+                "off-policy training can change train_freq semantics."
+            )
+    else:
+        raise ValueError("algorithm must be either 'ppo' or 'sac'.")
 
     if config.get("env_kwargs"):
         raise ValueError(

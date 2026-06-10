@@ -91,3 +91,16 @@ seed_123_reward: 2596.866
 ```
 
 Conclusion: this branch replaces the previous baseline checkpoint as the final candidate.
+
+## Next Optional Branch: SAC
+
+The next paper-reproduction branch is Soft Actor-Critic:
+
+```text
+configs/sac_humanoid_rlzoo.json
+configs/sac_humanoid_obsnorm.json
+```
+
+Run only a 1,000,000-step comparison first. Continue a SAC branch to 5,000,000
+steps only if its early result is competitive with the current final candidate.
+See `docs/sac_and_video.md` for exact commands.
