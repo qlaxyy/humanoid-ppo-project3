@@ -18,6 +18,7 @@
 | 20260605_153005_seed3407_sac_humanoid_cpu_probe | 2026-06-05 | `31bf771` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 200000 | 200000 | 1 | N/A | 256 | Colab CPU | 896.367 | SAC CPU probe, seeds 0-4, std 302.616, mean length 178.6, seed 123 reward 952.200; promising but far below current PPO final candidate |
 | 20260606_035618_seed3407_sac_humanoid_fast_probe | 2026-06-06 | `65a1694` | `configs/sac_humanoid_fast_probe.json` | 3407 | 200000 | 200000 | 1 | N/A | 256 | Kaggle T4 GPU | 481.650 | SAC fast probe, seeds 0-4, std 156.369, mean length 99.2; low score, do not continue this fast-probe branch |
 | kaggle_sac_cpu_probe_200k_seed3407 | 2026-06-06 | `65a1694` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 200000 | 200000 | 1 | N/A | 256 | Kaggle T4 GPU | 528.677 | Same SAC cpu_probe config rerun on Kaggle, seeds 0-4, std 41.109, mean length 103.2, seed 123 reward 533.753; does not reproduce the stronger Colab CPU probe result |
+| colab_sac_cpu_probe_200k_seed3407 | 2026-06-06 | `65a1694` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 200000 | 200000 | 1 | N/A | 256 | Colab CPU | 579.108 | Same SAC cpu_probe config rerun on Colab, seeds 0-4, std 55.303, mean length 113.4, seed 123 reward 620.384; below continuation threshold |
 
 ## 记录规范
 

@@ -160,3 +160,22 @@ Conclusion: the Kaggle rerun did not reproduce the stronger Colab SAC probe
 score. Because SAC is more sensitive to device/platform nondeterminism and
 the result is still far below the PPO final candidate, pause the SAC branch
 unless there is enough time for multiple seeds or a longer controlled run.
+
+Observed Colab rerun of the SAC cpu-probe config:
+
+```text
+run_id: colab_sac_cpu_probe_200k_seed3407
+platform: Colab CPU
+config: configs/sac_humanoid_cpu_probe.json
+actual_steps: 200000
+mean_reward: 579.108
+std_reward: 55.303
+min_reward: 477.429
+max_reward: 638.149
+mean_length: 113.4
+seed_123_reward: 620.384
+```
+
+Conclusion: repeated 200k SAC probes are below the continuation threshold.
+Stop the SAC branch for this submission cycle and keep the PPO RL Zoo-style
+5M checkpoint as the final model.
