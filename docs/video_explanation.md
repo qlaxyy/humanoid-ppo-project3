@@ -13,7 +13,7 @@ contains separate clips instead of one continuous training session.
    展示本地 Conda 环境、训练命令启动、SAC 训练开始后的日志输出和进度信息。
 
 2. `1:28-待补充`：训练中期阶段录屏。
-   为了补录训练中期画面，使用 `3500000` 步 checkpoint 创建了一个独立的演示 run，并从 `3500000` 步继续训练到 `3600000` 步。该片段用于展示训练中期的 reward、episode length、progress、checkpoint 等动态变化。
+   为了补录训练中期画面，使用 `2,500,000` 步 checkpoint 创建了一个独立的演示 run，并从 `2,500,000` 步继续训练到 `2,600,000` 步。该片段用于展示训练中期的 reward、episode length、progress、checkpoint 等动态变化。
 
 3. `待补充-待补充`：训练尾声阶段截图展示。
    由于完整 5,000,000 步训练耗时较长，尾声阶段安排在夜间运行，未能实时录制完整尾声视频。因此视频中展示训练结束后的终端截图，包括 `progress 5000000/5000000`、`Eval num_timesteps=5000000`、模型保存路径和最终评估结果。
@@ -35,13 +35,13 @@ contains separate clips instead of one continuous training session.
 Create an isolated middle-stage demo run:
 
 ```bash
-python prepare_mid_training_demo.py --source-run runs/local_sac_cpu_5m_seed3407 --source-step 3500000 --demo-run runs/local_sac_mid_demo_3500k_to_3600k --target-steps 3600000
+python prepare_mid_training_demo.py --source-run runs/local_sac_cpu_5m_seed3407 --source-step 2500000 --demo-run runs/local_sac_mid_demo_2500k_to_2600k --target-steps 2600000
 ```
 
 Record the middle-stage continuation:
 
 ```bash
-python train_sac.py --resume-from runs/local_sac_mid_demo_3500k_to_3600k --target-steps 3600000 --device cpu --verbose --status-freq 5000 --checkpoint-freq 50000 --eval-freq 50000
+python train_sac.py --resume-from runs/local_sac_mid_demo_2500k_to_2600k --target-steps 2600000 --device cpu --verbose --status-freq 5000 --checkpoint-freq 50000 --eval-freq 50000
 ```
 
 This middle-stage demo does not replace the final submitted policy. The final
