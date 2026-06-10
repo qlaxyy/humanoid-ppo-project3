@@ -57,9 +57,22 @@ python train.py --resume-from runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_p
 python evaluate_checkpoints.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --every 500000 --seeds 0 1 2 3 4 --device cpu
 ```
 
+Observed checkpoint sweep result:
+
+```text
+best_step: 5000000
+mean_reward: 2275.000
+std_reward: 814.137
+min_reward: 1679.109
+max_reward: 3875.276
+mean_length: 245.4
+```
+
 After the sweep, formally evaluate the best checkpoint:
 
 ```bash
-python evaluate.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step <best_step> --seeds 0 1 2 3 4 5 6 7 8 9 --episodes-per-seed 1 --device cpu
-python test.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step <best_step> --seed 123 --episodes 1 --device cpu
+python evaluate.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seeds 0 1 2 3 4 5 6 7 8 9 --episodes-per-seed 1 --device cpu
+python test.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
 ```
+
+If the formal 10-seed mean reward remains above `927.009`, update `docs/final_candidate.md` to the RL Zoo-style 5M checkpoint.
