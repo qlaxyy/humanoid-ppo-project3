@@ -2,15 +2,25 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 from dataclasses import asdict
 from pathlib import Path
 
 # Colab and most remote runners do not have an X11 display. Select MuJoCo's
 # headless EGL backend before importing Gymnasium/MuJoCo rendering code.
-os.environ.setdefault("MUJOCO_GL", "egl")
+def requested_backend(argv: list[str]) -> str | None:
+    for index, arg in enumerate(argv):
+        if arg == "--backend" and index + 1 < len(argv):
+            return argv[index + 1]
+        if arg.startswith("--backend="):
+            return arg.split("=", 1)[1]
+    return None
 
+
+os.environ.setdefault("MUJOCO_GL", requested_backend(sys.argv) or "egl")
+
+import imageio.v2 as imageio
 import gymnasium as gym
-from gymnasium.wrappers import RecordVideo
 
 from humanoid_rl import ASSIGNMENT_ENV_ID
 from humanoid_rl.artifacts import checkpoint_artifacts
@@ -38,6 +48,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="cpu")
     parser.add_argument("--deterministic", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--name-prefix", type=str, default=None)
+    parser.add_argument("--backend", choices=["egl", "osmesa", "glfw"], default=None)
+    parser.add_argument("--fps", type=int, default=30)
+    parser.add_argument("--max-steps", type=int, default=None)
     return parser.parse_args()
 
 
@@ -80,15 +93,9 @@ def main() -> int:
     model = load_model_for_config(model_path, config, device=args.device)
     normalizer = load_vecnormalize_for_inference(vecnormalize_path)
 
-    env = gym.make(env_id, render_mode="rgb_array")
-    env = RecordVideo(
-        env,
-        video_folder=str(video_dir),
-        episode_trigger=lambda episode_id: True,
-        name_prefix=prefix,
-    )
-
     results: list[EpisodeResult] = []
+    video_paths: list[Path] = []
+    env = gym.make(env_id, render_mode="rgb_array")
     try:
         env.action_space.seed(args.seed)
         env.observation_space.seed(args.seed)
@@ -100,13 +107,23 @@ def main() -> int:
             length = 0
             terminated = False
             truncated = False
+            video_path = video_dir / f"{prefix}-episode-{episode_index}.mp4"
+            video_paths.append(video_path)
 
-            while not (terminated or truncated):
-                model_obs = normalize_observation(normalizer, obs)
-                action, _ = model.predict(model_obs, deterministic=bool(args.deterministic))
-                obs, reward, terminated, truncated, _ = env.step(action)
-                total_reward += float(reward)
-                length += 1
+            with imageio.get_writer(str(video_path), fps=int(args.fps), macro_block_size=1) as writer:
+                writer.append_data(env.render())
+
+                while not (terminated or truncated):
+                    if args.max_steps is not None and length >= int(args.max_steps):
+                        truncated = True
+                        break
+
+                    model_obs = normalize_observation(normalizer, obs)
+                    action, _ = model.predict(model_obs, deterministic=bool(args.deterministic))
+                    obs, reward, terminated, truncated, _ = env.step(action)
+                    total_reward += float(reward)
+                    length += 1
+                    writer.append_data(env.render())
 
             results.append(
                 EpisodeResult(
@@ -121,7 +138,6 @@ def main() -> int:
     finally:
         env.close()
 
-    mp4_files = sorted(video_dir.glob(f"{prefix}*.mp4"))
     payload = {
         "run_dir": str(args.run_dir),
         "model_path": str(model_path),
@@ -130,8 +146,11 @@ def main() -> int:
         "seed": args.seed,
         "episodes": args.episodes,
         "deterministic": bool(args.deterministic),
+        "mujoco_gl": os.environ.get("MUJOCO_GL"),
+        "fps": args.fps,
+        "max_steps": args.max_steps,
         "results": [asdict(result) for result in results],
-        "videos": [str(path) for path in mp4_files],
+        "videos": [str(path) for path in video_paths],
     }
     summary_path = video_dir / f"{prefix}_summary.json"
     write_json(summary_path, payload)
@@ -143,7 +162,7 @@ def main() -> int:
             f"terminated={result.terminated} truncated={result.truncated}"
         )
     print(f"Saved summary: {summary_path}")
-    for path in mp4_files:
+    for path in video_paths:
         print(f"Saved video:   {path}")
     return 0
 
