@@ -9,7 +9,7 @@ from stable_baselines3 import SAC
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 
 from humanoid_rl import MAX_ENV_STEPS
-from humanoid_rl.artifacts import find_resume_artifacts
+from humanoid_rl.artifacts import checkpoint_artifacts, find_resume_artifacts
 from humanoid_rl.callbacks import (
     MetadataCallback,
     ProgressReporterCallback,
@@ -31,6 +31,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--config", type=Path, default=None)
     parser.add_argument("--resume-from", type=Path, default=None)
+    parser.add_argument(
+        "--resume-step",
+        type=int,
+        default=None,
+        help="Resume from checkpoint_model_<step>_steps.zip under --resume-from.",
+    )
     parser.add_argument("--run-name", type=str, default=None)
     parser.add_argument("--output-dir", type=Path, default=None)
 
@@ -183,6 +189,9 @@ def build_model(config: dict[str, Any], train_env, tensorboard_dir: Path) -> SAC
 
 def main() -> int:
     args = parse_args()
+    if args.resume_step is not None and args.resume_from is None:
+        raise ValueError("--resume-step requires --resume-from.")
+
     config = load_effective_config(args)
 
     for warning in validate_config(config):
@@ -203,7 +212,20 @@ def main() -> int:
     resume_model_path: Path | None = None
     resume_vecnormalize_path: Path | None = None
     if args.resume_from is not None:
-        resume_model_path, resume_vecnormalize_path = find_resume_artifacts(run_dir)
+        if args.resume_step is not None:
+            resume_model_path, resume_vecnormalize_path = checkpoint_artifacts(
+                run_dir,
+                int(args.resume_step),
+                require_vecnormalize=(
+                    bool(config["normalize_observation"])
+                    or bool(config["normalize_reward"])
+                ),
+            )
+            print(f"Resuming from checkpoint: {resume_model_path}")
+            if resume_vecnormalize_path is not None:
+                print(f"Loading VecNormalize statistics: {resume_vecnormalize_path}")
+        else:
+            resume_model_path, resume_vecnormalize_path = find_resume_artifacts(run_dir)
         if (
             bool(config["normalize_observation"]) or bool(config["normalize_reward"])
         ) and resume_vecnormalize_path is None:
@@ -287,6 +309,7 @@ def main() -> int:
             "raw_eval_reward_required": True,
         },
         "resume": args.resume_from is not None,
+        "resume_step": args.resume_step,
         "last_num_timesteps": current_steps,
         "target_steps": target_steps,
     }

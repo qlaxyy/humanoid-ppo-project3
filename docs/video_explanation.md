@@ -41,8 +41,12 @@ python prepare_mid_training_demo.py --source-run runs/local_sac_cpu_5m_seed3407 
 Record the middle-stage continuation:
 
 ```bash
-python train_sac.py --resume-from runs/local_sac_mid_demo_2500k_to_2600k --target-steps 2600000 --device cpu --verbose --status-freq 5000 --checkpoint-freq 50000 --eval-freq 50000
+python train_sac.py --resume-from runs/local_sac_mid_demo_2500k_to_2600k --resume-step 2500000 --target-steps 2600000 --device cpu --quiet --no-progress-bar --status-freq 5000 --checkpoint-freq 50000 --eval-freq 50000
 ```
+
+The progress lines include full decimal reward values, for example
+`recent_ep_rew_mean=4432.123`, so the recording does not rely on Stable-Baselines3
+tables that may use scientific notation.
 
 This middle-stage demo does not replace the final submitted policy. The final
 submitted policy remains:

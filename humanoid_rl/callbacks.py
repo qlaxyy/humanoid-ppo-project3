@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import time
+from collections import deque
 from pathlib import Path
 from typing import Any
 
@@ -85,6 +86,7 @@ class ProgressReporterCallback(BaseCallback):
         start_steps: int,
         report_freq: int,
         status_path: Path,
+        reward_window: int = 20,
     ):
         super().__init__()
         self.target_steps = int(target_steps)
@@ -93,6 +95,8 @@ class ProgressReporterCallback(BaseCallback):
         self.status_path = Path(status_path)
         self.started_at = time.monotonic()
         self.last_report_steps = self.start_steps
+        self.episode_rewards: deque[float] = deque(maxlen=max(1, int(reward_window)))
+        self.episode_lengths: deque[float] = deque(maxlen=max(1, int(reward_window)))
 
     @staticmethod
     def _format_seconds(seconds: float) -> str:
@@ -103,7 +107,13 @@ class ProgressReporterCallback(BaseCallback):
             return f"{hours:d}:{minutes:02d}:{secs:02d}"
         return f"{minutes:d}:{secs:02d}"
 
-    def _write_status(self, fps: float, eta_seconds: float) -> None:
+    def _write_status(
+        self,
+        fps: float,
+        eta_seconds: float,
+        recent_reward: float | None,
+        recent_length: float | None,
+    ) -> None:
         payload = {
             "num_timesteps": int(self.num_timesteps),
             "target_steps": self.target_steps,
@@ -112,11 +122,23 @@ class ProgressReporterCallback(BaseCallback):
             ),
             "fps": fps,
             "eta_seconds": eta_seconds,
+            "recent_ep_rew_mean": recent_reward,
+            "recent_ep_len_mean": recent_length,
         }
         self.status_path.parent.mkdir(parents=True, exist_ok=True)
         with self.status_path.open("w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2)
             f.write("\n")
+
+    def _collect_episode_info(self) -> None:
+        for info in self.locals.get("infos", []):
+            episode = info.get("episode") if isinstance(info, dict) else None
+            if episode is None:
+                continue
+            if "r" in episode:
+                self.episode_rewards.append(float(episode["r"]))
+            if "l" in episode:
+                self.episode_lengths.append(float(episode["l"]))
 
     def _report(self) -> None:
         elapsed = max(1e-9, time.monotonic() - self.started_at)
@@ -125,17 +147,40 @@ class ProgressReporterCallback(BaseCallback):
         remaining_steps = max(0, self.target_steps - int(self.num_timesteps))
         eta_seconds = remaining_steps / fps if fps > 0 else 0.0
         percent = 100.0 * int(self.num_timesteps) / max(1, self.target_steps)
+        recent_reward = (
+            sum(self.episode_rewards) / len(self.episode_rewards)
+            if self.episode_rewards
+            else None
+        )
+        recent_length = (
+            sum(self.episode_lengths) / len(self.episode_lengths)
+            if self.episode_lengths
+            else None
+        )
+        reward_text = (
+            f" recent_ep_rew_mean={recent_reward:.3f}"
+            f" recent_ep_len_mean={recent_length:.1f}"
+            if recent_reward is not None and recent_length is not None
+            else ""
+        )
         print(
             "progress "
             f"{int(self.num_timesteps)}/{self.target_steps} "
             f"({percent:.1f}%) "
             f"fps={fps:.1f} "
-            f"eta={self._format_seconds(eta_seconds)}",
+            f"eta={self._format_seconds(eta_seconds)}"
+            f"{reward_text}",
             flush=True,
         )
-        self._write_status(fps=fps, eta_seconds=eta_seconds)
+        self._write_status(
+            fps=fps,
+            eta_seconds=eta_seconds,
+            recent_reward=recent_reward,
+            recent_length=recent_length,
+        )
 
     def _on_step(self) -> bool:
+        self._collect_episode_info()
         current_steps = int(self.num_timesteps)
         if current_steps - self.last_report_steps >= self.report_freq:
             self.last_report_steps = current_steps
