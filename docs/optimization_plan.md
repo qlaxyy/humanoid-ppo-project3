@@ -176,6 +176,22 @@ mean_length: 113.4
 seed_123_reward: 620.384
 ```
 
-Conclusion: repeated 200k SAC probes are below the continuation threshold.
-Stop the SAC branch for this submission cycle and keep the PPO RL Zoo-style
-5M checkpoint as the final model.
+Later continuation to 1M:
+
+```text
+run_id: colab_sac_cpu_probe_200k_seed3407
+platform: Colab CPU
+config: configs/sac_humanoid_cpu_probe.json
+actual_steps: 1000000
+mean_reward: 1520.323
+std_reward: 909.567
+min_reward: 465.276
+max_reward: 2628.132
+mean_length: 282.0
+seed_123_reward: 2816.869
+```
+
+Conclusion: SAC improved substantially after 1M steps, but the 5-seed mean is
+still below the PPO RL Zoo-style final candidate (`2179.016`) and the variance
+is high. Sweep SAC checkpoints before any longer run; continue to 5M only if a
+checkpoint evaluation is clearly competitive.
