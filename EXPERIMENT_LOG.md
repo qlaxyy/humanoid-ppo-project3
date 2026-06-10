@@ -9,6 +9,7 @@
 | 20260604_115101_seed3407_ppo_humanoid_colab | 2026-06-04 | `09e22f5` | `configs/ppo_humanoid_colab.json` | 3407 | 1000000 | 1000000 | 4 | 1250 | 250 | Colab GPU | 850.491 | Baseline PPO rerun, seeds 0-4, std 204.609, mean length 161.0, seed 123 reward 1239.427 |
 | 20260604_140725_seed3407_ppo_humanoid_stable | 2026-06-04 | `3cd7974` | `configs/ppo_humanoid_stable.json` | 3407 | 1000000 | 1000000 | 4 | 1250 | 250 | Colab T4 GPU | 753.044 | Stable PPO, seeds 0-4, std 95.806, mean length 135.0, seed 123 reward 818.042; worse than baseline |
 | 20260605_031927_seed3407_ppo_humanoid_colab | 2026-06-05 | `73afbd7` | `configs/ppo_humanoid_colab.json` | 3407 | 1000000 | 1000000 | 4 | 1250 | 250 | Colab T4 GPU | 833.358 | Baseline PPO in Drive-cloned repo, seeds 0-4, std 110.924, mean length 156.2, seed 123 reward 449.272 |
+| 20260605_031927_seed3407_ppo_humanoid_colab | 2026-06-05 | `73afbd7` | `configs/ppo_humanoid_colab.json` | 3407 | 5000000 | 5000000 | 4 | 1250 | 250 | Colab T4 GPU | 714.891 | Same baseline continued to 5M, seeds 0-4, std 73.373, mean length 142.8, seed 123 reward 1247.017; final checkpoint worse than 1M |
 
 ## 记录规范
 

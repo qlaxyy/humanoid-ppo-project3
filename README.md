@@ -112,6 +112,18 @@ python test.py --run-dir /content/drive/MyDrive/humanoid_runs/<run_name> --seed 
 python summarize_experiments.py --runs-dir /content/drive/MyDrive/humanoid_runs
 ```
 
+如果训练到 5,000,000 步后 `latest_model.zip` 退化，可以评估中间 checkpoint 并选择分数最高的合法模型：
+
+```bash
+python evaluate_checkpoints.py --run-dir runs/<run_name> --every 500000 --seeds 0 1 2 3 4
+```
+
+更精细地评估指定 checkpoint：
+
+```bash
+python evaluate_checkpoints.py --run-dir runs/<run_name> --steps 1000000 1500000 2000000 --seeds 0 1 2 3 4
+```
+
 如果需要可视化：
 
 ```bash
