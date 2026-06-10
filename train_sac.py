@@ -12,6 +12,7 @@ from humanoid_rl import MAX_ENV_STEPS
 from humanoid_rl.artifacts import find_resume_artifacts
 from humanoid_rl.callbacks import (
     MetadataCallback,
+    ProgressReporterCallback,
     SaveVecNormalizeCallback,
     callback_freq,
 )
@@ -42,6 +43,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-episodes", type=int, default=None)
     parser.add_argument("--log-interval", type=int, default=None)
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument(
+        "--status-freq",
+        type=int,
+        default=None,
+        help="Print one compact progress line every N environment steps.",
+    )
 
     parser.add_argument("--learning-rate", type=float, default=None)
     parser.add_argument("--batch-size", type=int, default=None)
@@ -320,6 +327,15 @@ def main() -> int:
                 ),
             ]
         )
+        if args.status_freq is not None and args.status_freq > 0:
+            callbacks.callbacks.append(
+                ProgressReporterCallback(
+                    target_steps=target_steps,
+                    start_steps=current_steps,
+                    report_freq=int(args.status_freq),
+                    status_path=run_dir / "progress.json",
+                )
+            )
 
         model.learn(
             total_timesteps=remaining_steps,
