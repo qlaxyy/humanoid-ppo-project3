@@ -251,6 +251,7 @@ def main() -> int:
             device=config["device"],
             seed=seed,
         )
+        model.verbose = int(config.get("verbose", 1))
         reset_num_timesteps = False
     else:
         model = build_model(config, train_env, logs_dir / "tensorboard")
