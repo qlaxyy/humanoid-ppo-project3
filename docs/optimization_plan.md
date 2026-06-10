@@ -140,3 +140,23 @@ Conclusion: this faster SAC variant is useful for wall-clock testing but learns
 too slowly under the current settings. Do not replace the PPO final candidate
 or continue this branch unless a later configuration shows a much stronger
 early score.
+
+Observed Kaggle rerun of the Colab SAC cpu-probe config:
+
+```text
+run_id: kaggle_sac_cpu_probe_200k_seed3407
+platform: Kaggle T4 GPU
+config: configs/sac_humanoid_cpu_probe.json
+actual_steps: 200000
+mean_reward: 528.677
+std_reward: 41.109
+min_reward: 468.050
+max_reward: 590.816
+mean_length: 103.2
+seed_123_reward: 533.753
+```
+
+Conclusion: the Kaggle rerun did not reproduce the stronger Colab SAC probe
+score. Because SAC is more sensitive to device/platform nondeterminism and
+the result is still far below the PPO final candidate, pause the SAC branch
+unless there is enough time for multiple seeds or a longer controlled run.
