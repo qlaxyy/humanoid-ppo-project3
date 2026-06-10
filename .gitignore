@@ -28,9 +28,9 @@ submissions/*
 *.mp4
 *.avi
 *.mov
+~$*.docx
 
 # OS/editor
 .DS_Store
 Thumbs.db
 .vscode/
-
