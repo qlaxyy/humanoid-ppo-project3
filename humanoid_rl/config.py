@@ -62,6 +62,23 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "policy_net_arch": [256, 256],
         "qf_net_arch": [256, 256],
     },
+    "td3": {
+        "policy": "MlpPolicy",
+        "learning_rate": 1e-3,
+        "buffer_size": 1_000_000,
+        "learning_starts": 10_000,
+        "batch_size": 256,
+        "tau": 0.005,
+        "gamma": 0.99,
+        "train_freq": 1,
+        "gradient_steps": 1,
+        "policy_delay": 2,
+        "target_policy_noise": 0.2,
+        "target_noise_clip": 0.5,
+        "action_noise_sigma": 0.1,
+        "policy_net_arch": [400, 300],
+        "qf_net_arch": [400, 300],
+    },
 }
 
 
@@ -134,14 +151,14 @@ def validate_config(config: dict[str, Any]) -> list[str]:
                 f"n_steps*n_envs={rollout_size}. This could make PPO overshoot the "
                 "assignment step limit. Adjust target_steps, n_steps, or n_envs."
             )
-    elif algorithm == "sac":
+    elif algorithm in {"sac", "td3"}:
         if n_envs != 1:
             warnings.append(
-                "SAC is configured most conservatively with n_envs=1. Vectorized "
+                f"{algorithm.upper()} is configured most conservatively with n_envs=1. Vectorized "
                 "off-policy training can change train_freq semantics."
             )
     else:
-        raise ValueError("algorithm must be either 'ppo' or 'sac'.")
+        raise ValueError("algorithm must be one of: 'ppo', 'sac', or 'td3'.")
 
     if config.get("env_kwargs"):
         raise ValueError(

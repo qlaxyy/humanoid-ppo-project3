@@ -282,3 +282,36 @@ Conclusion: the SAC 4.0M checkpoint replaces the SAC 1.9M checkpoint as the
 final candidate. The formal 10-seed evaluation confirms that all evaluated
 episodes reach the 1000-step limit and the score remains below the 5M
 environment interaction cap.
+
+## TD3 Fast Probe Branch
+
+TD3 is a classic off-policy continuous-control algorithm from the Twin Delayed
+DDPG paper. It is a reasonable speed-oriented branch because it is available in
+Stable-Baselines3 without additional dependencies, uses delayed actor updates,
+and keeps the same policy/test artifact format as the rest of this project.
+
+Initial probe config:
+
+```text
+config: configs/td3_humanoid_fast_probe.json
+algorithm: TD3
+target_steps: 200000
+train_freq: 4
+gradient_steps: 1
+policy_delay: 2
+network: pi=[400, 300], qf=[400, 300]
+action_noise_sigma: 0.1
+```
+
+Local CPU smoke/probe commands:
+
+```bash
+python train_td3.py --config configs/td3_humanoid_fast_probe.json --target-steps 20000 --device cpu --quiet --no-progress-bar --status-freq 2000 --run-name local_td3_fast_probe_20k
+python train_td3.py --resume-from runs/local_td3_fast_probe_20k --target-steps 200000 --device cpu --quiet --no-progress-bar --status-freq 10000
+python evaluate.py --run-dir runs/local_td3_fast_probe_20k --seeds 0 1 2 3 4 --episodes-per-seed 1 --device cpu
+```
+
+Decision rule: continue TD3 only if the 200k probe is both faster than SAC and
+shows a reward trend competitive with SAC's early learning curve. The current
+final candidate remains the SAC 4.0M checkpoint unless TD3 produces a formally
+evaluated checkpoint above `6192.997`.
