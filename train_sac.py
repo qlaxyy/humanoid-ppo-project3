@@ -40,6 +40,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--checkpoint-freq", type=int, default=None)
     parser.add_argument("--eval-freq", type=int, default=None)
     parser.add_argument("--eval-episodes", type=int, default=None)
+    parser.add_argument("--log-interval", type=int, default=None)
+    parser.add_argument("--quiet", action="store_true")
 
     parser.add_argument("--learning-rate", type=float, default=None)
     parser.add_argument("--batch-size", type=int, default=None)
@@ -76,6 +78,7 @@ def apply_overrides(config: dict[str, Any], args: argparse.Namespace) -> dict[st
         "checkpoint_freq": args.checkpoint_freq,
         "eval_freq": args.eval_freq,
         "eval_episodes": args.eval_episodes,
+        "log_interval": args.log_interval,
     }
     for key, value in direct_overrides.items():
         if value is not None:
@@ -98,6 +101,8 @@ def apply_overrides(config: dict[str, Any], args: argparse.Namespace) -> dict[st
     config["algorithm"] = "sac"
     config["n_envs"] = 1
     config["vec_env"] = "dummy"
+    if args.quiet:
+        config["verbose"] = 0
     return config
 
 
@@ -162,7 +167,7 @@ def build_model(config: dict[str, Any], train_env, tensorboard_dir: Path) -> SAC
         seed=int(config["seed"]),
         device=config["device"],
         tensorboard_log=str(tensorboard_dir),
-        verbose=1,
+        verbose=int(config.get("verbose", 1)),
     )
 
 
