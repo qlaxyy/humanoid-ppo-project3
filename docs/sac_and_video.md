@@ -101,6 +101,18 @@ If mp4 writing still fails, save PNG frames only:
 python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --max-steps 80 --frames-only
 ```
 
+If rendering hangs only after loading the SB3 model, split policy execution and
+rendering into two processes:
+
+```bash
+python export_trajectory.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --max-steps 80
+python render_trajectory.py --trajectory runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel/trajectories/<trajectory_file>.npz --backend egl
+```
+
+The second script does not import Stable-Baselines3 or load the neural-network
+model. It only replays the saved action sequence, which avoids model/rendering
+backend conflicts on Colab.
+
 General form:
 
 ```bash
