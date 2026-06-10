@@ -1,6 +1,6 @@
 # Optimization Plan
 
-Current best candidate:
+Previous best candidate:
 
 ```text
 run_id: 20260605_031927_seed3407_ppo_humanoid_colab
@@ -76,3 +76,18 @@ python test.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parall
 ```
 
 If the formal 10-seed mean reward remains above `927.009`, update `docs/final_candidate.md` to the RL Zoo-style 5M checkpoint.
+
+Formal 10-seed result:
+
+```text
+run_id: 20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel
+checkpoint_step: 5000000
+mean_reward: 2179.016
+std_reward: 666.613
+min_reward: 1497.165
+max_reward: 3875.276
+mean_length: 237.8
+seed_123_reward: 2596.866
+```
+
+Conclusion: this branch replaces the previous baseline checkpoint as the final candidate.
