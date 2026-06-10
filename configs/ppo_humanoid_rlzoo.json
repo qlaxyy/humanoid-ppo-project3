@@ -1,0 +1,38 @@
+{
+  "env_id": "Humanoid-v5",
+  "seed": 3407,
+  "target_steps": 1000000,
+  "output_dir": "runs",
+  "n_envs": 1,
+  "vec_env": "dummy",
+  "device": "cpu",
+  "torch_threads": 1,
+  "normalize_observation": true,
+  "normalize_reward": true,
+  "norm_gamma": 0.95,
+  "clip_obs": 10.0,
+  "checkpoint_freq": 100000,
+  "eval_freq": 100000,
+  "eval_episodes": 3,
+  "log_interval": 1,
+  "ppo": {
+    "policy": "MlpPolicy",
+    "learning_rate": 0.0000356987,
+    "n_steps": 500,
+    "batch_size": 250,
+    "n_epochs": 5,
+    "gamma": 0.95,
+    "gae_lambda": 0.9,
+    "clip_range": 0.3,
+    "ent_coef": 0.00238306,
+    "vf_coef": 0.431892,
+    "max_grad_norm": 2.0,
+    "target_kl": null,
+    "activation_fn": "relu",
+    "ortho_init": false,
+    "log_std_init": -2.0,
+    "policy_net_arch": [256, 256],
+    "value_net_arch": [256, 256]
+  }
+}
+

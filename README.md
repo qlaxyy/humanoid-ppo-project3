@@ -82,6 +82,14 @@ python train.py --config configs/ppo_humanoid_colab.json --target-steps 1000000 
 python train.py --config configs/ppo_humanoid_stable.json --target-steps 1000000 --device auto --output-dir /content/drive/MyDrive/humanoid_runs
 ```
 
+也可以尝试 RL Baselines3 Zoo 风格的 Humanoid PPO 参数。先短跑 100 万步对比，不要直接训满：
+
+```bash
+python train.py --config configs/ppo_humanoid_rlzoo_parallel.json --target-steps 1000000
+```
+
+该配置基于 RL Baselines3 Zoo 中 `Humanoid-v4` 的 tuned PPO 思路，并适配为 4 个并行环境以保持 rollout 与作业步数对齐。
+
 继续训练到作业允许的上限：
 
 ```bash

@@ -39,6 +39,7 @@
 
 - 不同步数的平均原始 reward
 - PPO baseline 与稳定版 PPO 的对比
+- RL Baselines3 Zoo 风格 PPO 参数对比，如果完成该实验
 - 多 seed 评估表
 - 最终分数截图
 - 训练曲线截图，可来自 TensorBoard

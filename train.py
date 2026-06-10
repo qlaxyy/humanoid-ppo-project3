@@ -4,7 +4,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import torch.nn as nn
 from stable_baselines3 import PPO
@@ -23,6 +23,13 @@ from humanoid_rl.reproducibility import configure_torch_threads, seed_everything
 
 
 DEFAULT_CONFIG_PATH = Path("configs/ppo_humanoid_colab.json")
+
+ACTIVATION_FNS = {
+    "tanh": nn.Tanh,
+    "relu": nn.ReLU,
+    "gelu": nn.GELU,
+    "elu": nn.ELU,
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -57,6 +64,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-kl", type=float, default=None)
     parser.add_argument("--progress-bar", action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args()
+
+
+def make_schedule(value: float | str) -> float | Callable[[float], float]:
+    if isinstance(value, str):
+        if value.startswith("lin_"):
+            initial_value = float(value.removeprefix("lin_"))
+
+            def schedule(progress_remaining: float) -> float:
+                return progress_remaining * initial_value
+
+            return schedule
+        return float(value)
+    return float(value)
 
 
 def apply_overrides(config: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
@@ -166,23 +186,33 @@ def find_resume_artifacts(run_dir: Path) -> tuple[Path, Path | None]:
 
 def build_model(config: dict[str, Any], train_env, tensorboard_dir: Path) -> PPO:
     ppo = config["ppo"]
+    activation_name = str(ppo.get("activation_fn", "tanh")).lower()
+    if activation_name not in ACTIVATION_FNS:
+        raise ValueError(
+            f"Unsupported activation_fn={activation_name!r}. "
+            f"Choose from {sorted(ACTIVATION_FNS)}."
+        )
     policy_kwargs = {
-        "activation_fn": nn.Tanh,
+        "activation_fn": ACTIVATION_FNS[activation_name],
         "net_arch": {
             "pi": list(ppo["policy_net_arch"]),
             "vf": list(ppo["value_net_arch"]),
         },
+        "ortho_init": bool(ppo.get("ortho_init", True)),
     }
+    if ppo.get("log_std_init") is not None:
+        policy_kwargs["log_std_init"] = float(ppo["log_std_init"])
+
     return PPO(
         policy=ppo["policy"],
         env=train_env,
-        learning_rate=float(ppo["learning_rate"]),
+        learning_rate=make_schedule(ppo["learning_rate"]),
         n_steps=int(ppo["n_steps"]),
         batch_size=int(ppo["batch_size"]),
         n_epochs=int(ppo["n_epochs"]),
         gamma=float(ppo["gamma"]),
         gae_lambda=float(ppo["gae_lambda"]),
-        clip_range=float(ppo["clip_range"]),
+        clip_range=make_schedule(ppo["clip_range"]),
         ent_coef=float(ppo["ent_coef"]),
         vf_coef=float(ppo["vf_coef"]),
         max_grad_norm=float(ppo["max_grad_norm"]),

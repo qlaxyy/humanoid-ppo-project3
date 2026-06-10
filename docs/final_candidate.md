@@ -39,3 +39,4 @@ python test.py --run-dir runs/20260605_031927_seed3407_ppo_humanoid_colab --chec
 
 Important: do not submit `latest_model.zip` as the final candidate for this run, because the 5,000,000-step latest model evaluated worse than the 4,500,000-step checkpoint.
 
+Further optimization candidates should be compared against this checkpoint before replacing it.
