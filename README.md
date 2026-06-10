@@ -1,188 +1,153 @@
-# AI Fundamentals Assignment 3: Humanoid-v5
+# Humanoid-v5 Continuous Control with SAC
 
-本项目用于完成“人工智能基础及应用大作业 3”：在 Gymnasium MuJoCo `Humanoid-v5` 环境中训练强化学习智能体。
+本项目完成 Gymnasium MuJoCo `Humanoid-v5` 连续控制任务。仓库创建初期以 PPO 为基线，随后对 RL Zoo 风格 PPO、TD3 和 SAC 进行了对比，最终选择 Stable-Baselines3 的 Soft Actor-Critic（SAC）作为提交方案。
 
-核心策略：
+## 最终结果
 
-- 环境固定为 `Humanoid-v5`
-- 依赖版本固定在 `requirements.txt`
-- 算法使用 Stable-Baselines3 的 PPO
-- 训练默认使用 `VecNormalize`，并保存归一化统计量
-- 测试和评估脚本使用原始 Gymnasium reward，不使用归一化 reward 作为最终分数
-- 总环境交互步数硬限制为 `5,000,000`
+- 环境：`Humanoid-v5`
+- 算法：SAC（`MlpPolicy`）
+- 训练步数：`5,000,000`
+- 训练 seed：`3407`
+- 正式评估：10 个测试 seed，每个 seed 运行 1 个 episode
+- 平均原始累计奖励：`6780.676 ± 24.244`
+- 最低 / 最高奖励：`6753.711 / 6817.721`
+- 平均 episode length：`1000.0`
+- 最终 checkpoint：`checkpoint_model_5000000_steps.zip`
 
-## 目录结构
+正式成绩以多 seed 平均值为主，`6817.721` 是 seed 8 对应的最高单回合结果。
+
+![Checkpoint sweep](docs/checkpoint_sweep_curve.png)
+
+## 方法概述
+
+最终 SAC 配置使用两个隐藏层为 `[256, 256]` 的策略网络和 Q 网络，经验回放池容量为 `300000`，学习率为 `3e-4`，折扣因子为 `0.99`，目标网络软更新系数为 `0.005`。熵系数和目标熵均由算法自动调整。
+
+训练直接使用原生 `Humanoid-v5` 奖励，没有修改环境物理参数，也没有启用观测或奖励归一化。最终评价由原生环境 `step()` 返回的累计 reward 计算。
+
+完整配置见 [`configs/sac_humanoid_cpu_probe.json`](configs/sac_humanoid_cpu_probe.json)。算法选择和实验过程见 [`EXPERIMENT_LOG.md`](EXPERIMENT_LOG.md) 与 [`report_final.md`](report_final.md)。
+
+## 项目结构
 
 ```text
 .
-├── configs/ppo_humanoid_colab.json  # 默认 PPO baseline 配置
-├── configs/ppo_humanoid_stable.json # 更保守的 PPO 对比配置
-├── humanoid_rl/                     # 可复现训练、环境、评估工具
-├── train.py                         # 训练与断点续训
-├── evaluate.py                      # 多 seed 原始奖励评估
-├── test.py                          # 单次测试，支持 --seed
-├── smoke_test.py                    # 环境和版本快速检查
-├── EXPERIMENT_LOG.md                # 实验记录表
-├── ASSIGNMENT_NOTES.md              # 作业规则摘要
-└── docs/                            # 复现说明和报告提纲
+├── configs/
+│   ├── sac_humanoid_cpu_probe.json   # 最终 SAC 配置
+│   └── ppo_*.json / td3_*.json       # 对比实验配置
+├── humanoid_rl/                      # 环境、回调、评估和复现工具
+├── docs/
+│   ├── checkpoint_sweep_curve.png    # checkpoint 评估曲线
+│   ├── checkpoint_sweep_data.csv     # 绘图数据
+│   ├── final_candidate.md            # 最终候选模型记录
+│   └── video_explanation.md          # 分段训练及视频说明
+├── train_sac.py                      # 最终 SAC 训练与断点续训
+├── evaluate_checkpoints.py           # checkpoint 初筛
+├── evaluate.py                       # 多 seed 原始奖励评估
+├── test.py                           # 单 seed 测试
+├── record_video.py                   # 直接录制策略视频
+├── export_trajectory.py              # 导出动作轨迹
+├── render_trajectory.py              # 离线渲染轨迹
+├── requirements.txt                  # 固定依赖版本
+└── EXPERIMENT_LOG.md                 # 实验结果记录
 ```
 
-训练产物默认保存在 `runs/<run_name>/`，其中包括模型、归一化参数、TensorBoard 日志、评估结果和元数据。
+`train.py` 和 `train_td3.py` 分别保留了 PPO、TD3 对比实验流程，不是最终训练入口。
 
-## 安装
+## 环境安装
 
-建议使用 Python 3.11。Colab 通常已经提供 Python、CUDA 和 PyTorch 环境，但为了满足作业版本要求，仍建议先安装本项目依赖。
+推荐使用 Conda 创建独立环境：
 
 ```bash
+conda create -n humanoid-rl python=3.12 -y
+conda activate humanoid-rl
 pip install -r requirements.txt
 ```
 
-检查环境：
+快速检查 MuJoCo 环境：
 
 ```bash
 python smoke_test.py --steps 5
 ```
 
-如果只是在本机没有完整依赖的情况下看流程，可以临时放宽版本检查：
+最终实验使用的关键版本：
 
-```bash
-python smoke_test.py --steps 5 --no-strict-versions
+```text
+gymnasium==1.2.3
+mujoco==3.8.1
+stable-baselines3==2.8.0
+torch==2.7.1
+numpy==2.2.6
 ```
 
-正式训练和提交前不要放宽版本。
+## 训练
 
-## Colab 训练
-
-推荐工作流：
-
-1. 在本机 VS Code 修改代码，并 push 到 GitHub。
-2. 在 Colab 使用 GPU runtime。
-3. 每次新 runtime 把代码 clone 到 `/content`，这是临时盘但速度快。
-4. 把训练产物保存到 Google Drive，例如 `/content/drive/MyDrive/humanoid_runs`。
-5. Colab 断线后重新 clone 代码、安装依赖，再从 Drive 中的 run 目录恢复。
-
-Colab 中常用命令。每次新 runtime 先准备代码和依赖：
+一次性运行到作业允许的 500 万步：
 
 ```bash
-git clone https://github.com/qlaxyy/humanoid-ppo-project3.git /content/humanoid-ppo-project3-code
-cd /content/humanoid-ppo-project3-code
-pip install -r requirements.txt
-python smoke_test.py --steps 5
+python train_sac.py --config configs/sac_humanoid_cpu_probe.json --target-steps 5000000 --device cpu --quiet --no-progress-bar --status-freq 100000 --checkpoint-freq 100000 --eval-freq 100000 --run-name local_sac_cpu_5m_seed3407
 ```
 
-第一次先跑 baseline，并把输出保存到 Drive：
+从指定 checkpoint 继续训练：
 
 ```bash
-python train.py --config configs/ppo_humanoid_colab.json --target-steps 1000000 --device auto --output-dir /content/drive/MyDrive/humanoid_runs
+python train_sac.py --resume-from runs/local_sac_cpu_5m_seed3407 --resume-step 3000000 --target-steps 5000000 --device cpu --quiet --no-progress-bar --status-freq 100000 --checkpoint-freq 100000 --eval-freq 100000
 ```
 
-如果 baseline 日志里 `approx_kl` 和 `clip_fraction` 偏高，可以再跑一个更保守的 PPO 对比实验：
+用于录屏的高频指标模式：
 
 ```bash
-python train.py --config configs/ppo_humanoid_stable.json --target-steps 1000000 --device auto --output-dir /content/drive/MyDrive/humanoid_runs
+python train_sac.py --config configs/sac_humanoid_cpu_probe.json --target-steps 100000 --device cpu --quiet --progress-bar --status-freq 1000 --metric-table --checkpoint-freq 50000 --eval-freq 50000 --run-name local_sac_cpu_5m_seed3407
 ```
 
-也可以尝试 RL Baselines3 Zoo 风格的 Humanoid PPO 参数。先短跑 100 万步对比，不要直接训满：
+训练脚本会保存配置、运行元数据、checkpoint、评估日志和进度状态。断点续训会恢复模型参数和训练步数，但当前配置不保存 replay buffer，因此续训结果不保证与完全不中断的运行逐位一致。
+
+## 模型选择与评估
+
+先使用 5 个 seed 扫描 checkpoint：
 
 ```bash
-python train.py --config configs/ppo_humanoid_rlzoo_parallel.json --target-steps 1000000
+python evaluate_checkpoints.py --run-dir runs/local_sac_cpu_5m_seed3407 --every 100000 --seeds 0 1 2 3 4 --episodes-per-seed 1 --device cpu
 ```
 
-该配置基于 RL Baselines3 Zoo 中 `Humanoid-v4` 的 tuned PPO 思路，并适配为 4 个并行环境以保持 rollout 与作业步数对齐。
-
-继续训练到作业允许的上限：
+对选出的 500 万步 checkpoint 进行正式 10-seed 评估：
 
 ```bash
-python train.py --resume-from runs/<run_name> --target-steps 5000000 --device auto
+python evaluate.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seeds 0 1 2 3 4 5 6 7 8 9 --episodes-per-seed 1 --device cpu
 ```
 
-如果训练中途断线，`train.py --resume-from` 会优先加载 `latest_model.zip`；如果训练没有正常结束，则自动寻找 `models/checkpoint_model_*_steps.zip` 和对应的 VecNormalize 统计量。
-
-注意：默认配置的 `n_envs=4`、`n_steps=1250`，每个 PPO rollout 是 `5000` 步，能整除 `1,000,000` 和 `5,000,000`，避免 PPO 自动向上采样导致超过作业步数限制。
-
-## 评估和测试
-
-多随机种子评估，结果会写入 `runs/<run_name>/evaluations/`：
+复现最高单回合结果：
 
 ```bash
-python evaluate.py --run-dir /content/drive/MyDrive/humanoid_runs/<run_name> --seeds 0 1 2 3 4 --episodes-per-seed 1
+python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 8 --episodes 1 --device cpu
 ```
 
-单次测试，显式把命令行 seed 传给 `env.reset(seed=...)`：
+评估脚本会将 CSV 和 JSON 结果写入 `runs/<run_id>/evaluations/`。
+
+## 视频生成
+
+Windows 本地使用 GLFW 后端：
 
 ```bash
-python test.py --run-dir /content/drive/MyDrive/humanoid_runs/<run_name> --seed 123 --episodes 1
+python record_video.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 8 --episodes 1 --device cpu --backend glfw --fps 20
 ```
 
-汇总所有已经评估过的实验：
+如果直接录制遇到 OpenGL 问题，可先导出轨迹再离线渲染：
 
 ```bash
-python summarize_experiments.py --runs-dir /content/drive/MyDrive/humanoid_runs
+python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 8 --episodes 1 --device cpu
+python render_latest_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --backend glfw --fps 20
 ```
 
-如果训练到 5,000,000 步后 `latest_model.zip` 退化，可以评估中间 checkpoint 并选择分数最高的合法模型：
+## 模型与生成物
 
-```bash
-python evaluate_checkpoints.py --run-dir runs/<run_name> --every 500000 --seeds 0 1 2 3 4
+训练模型、运行日志、视频、Word 报告和个人提交压缩包不进入 Git 仓库，避免上传大量二进制文件。最终 policy 已随课程作业单独提交。若需要复现，应按上述命令重新训练，或将模型放回以下位置：
+
+```text
+runs/local_sac_cpu_5m_seed3407/models/checkpoint_model_5000000_steps.zip
 ```
 
-更精细地评估指定 checkpoint：
+## 参考资料
 
-```bash
-python evaluate_checkpoints.py --run-dir runs/<run_name> --steps 1000000 1500000 2000000 --seeds 0 1 2 3 4
-```
-
-确定最佳 checkpoint 后，可以直接用步数评估或测试：
-
-```bash
-python evaluate.py --run-dir runs/<run_name> --checkpoint-step 4500000 --seeds 0 1 2 3 4 5 6 7 8 9
-python test.py --run-dir runs/<run_name> --checkpoint-step 4500000 --seed 123 --episodes 1
-```
-
-如果需要可视化：
-
-```bash
-python test.py --run-dir runs/<run_name> --seed 123 --render-mode human
-```
-
-## 实验记录
-
-每次训练开始前，建议在 `EXPERIMENT_LOG.md` 增加一行，记录：
-
-- Git commit
-- 配置文件
-- seed
-- 目标步数
-- n_envs / n_steps / batch_size
-- 使用硬件
-- 最终平均分
-- 备注
-
-脚本也会自动写入：
-
-- `runs/<run_name>/config.json`
-- `runs/<run_name>/metadata.json`
-- `runs/<run_name>/evaluations/*.json`
-- `runs/<run_name>/evaluations/*.csv`
-
-## GitHub 同步
-
-本地修改代码后：
-
-```bash
-git status
-git add <changed-files>
-git commit -m "Describe the change"
-git push
-```
-
-更多解释见 `docs/git_workflow.md`。
-
-## 作业合规重点
-
-- 不修改 MuJoCo 原生物理参数。
-- 不修改环境 `step()` 返回值作为最终成绩。
-- 训练最多 `5,000,000` 环境交互步。
-- 使用归一化时，模型和 `vecnormalize_latest.pkl` 必须一起提交。
-- `test.py` 支持通过命令行设置 seed。
-- 最终报告分数应来自原始环境累计 reward。
+- [Gymnasium Humanoid-v5](https://gymnasium.farama.org/environments/mujoco/humanoid/)
+- [Soft Actor-Critic](https://arxiv.org/abs/1801.01290)
+- [Soft Actor-Critic Algorithms and Applications](https://arxiv.org/abs/1812.05905)
+- [Stable-Baselines3 SAC](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)

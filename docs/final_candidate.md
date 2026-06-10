@@ -31,6 +31,8 @@ std_reward: 24.244
 min_reward: 6753.711
 max_reward: 6817.721
 mean_length: 1000.0
+best_single_seed: 8
+best_single_seed_reward: 6817.721
 seed_3407_reward: 6770.456
 ```
 

@@ -25,9 +25,13 @@ submissions/*
 # Large/generated report artifacts are kept out of source control by default.
 # Track Markdown sources and commit final submission files only if intentionally needed.
 *.pdf
+*.docx
 *.mp4
 *.avi
 *.mov
+/*.zip
+/61524H29-吴尚扬-大作业3/
+/docs/report_final_render/
 ~$*.docx
 
 # OS/editor
