@@ -24,6 +24,7 @@
 | colab_sac_cpu_probe_200k_seed3407 | 2026-06-06 | `907a4b9` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 2000000 | 1900000 checkpoint | 1 | N/A | 256 | Colab CPU eval | 5983.969 | SAC 1.9M checkpoint formal 10-seed evaluation, std 25.421, min 5943.729, max 6027.610, mean length 1000.0, seed 123 reward 5997.139; replaces SAC 900k final candidate |
 | colab_sac_cpu_probe_200k_seed3407 | 2026-06-07 | `24dc711` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 5000000 | 4000000 checkpoint | 1 | N/A | 256 | Colab CPU eval | 6217.259 | SAC 5M checkpoint sweep result, best checkpoint among reported sweep, std 32.654, min 6154.199, max 6247.676, mean length 1000.0; requires formal 10-seed evaluation before replacing the 1.9M final candidate |
 | colab_sac_cpu_probe_200k_seed3407 | 2026-06-07 | `b381cb3` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 5000000 | 4000000 checkpoint | 1 | N/A | 256 | Colab CPU eval | 6192.997 | SAC 4.0M checkpoint formal 10-seed evaluation, std 44.335, min 6115.738, max 6247.676, mean length 1000.0, seed 123 reward 6167.959; replaces SAC 1.9M final candidate |
+| local_sac_cpu_5m_seed3407 | 2026-06-08 | `23d5920` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 5000000 | 5000000 checkpoint | 1 | N/A | 256 | Local CPU eval | 6784.349 | Local 5M checkpoint sweep result, seeds 0-4, std 21.355, min 6757.746, max 6809.433, mean length 1000.0; requires formal 10-seed evaluation before replacing SAC 4.0M Colab final candidate |
 
 ## 记录规范
 

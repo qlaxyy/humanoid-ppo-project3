@@ -315,3 +315,30 @@ Decision rule: continue TD3 only if the 200k probe is both faster than SAC and
 shows a reward trend competitive with SAC's early learning curve. The current
 final candidate remains the SAC 4.0M checkpoint unless TD3 produces a formally
 evaluated checkpoint above `6192.997`.
+
+## Local SAC 5M Branch
+
+The same SAC CPU probe configuration was also run locally to avoid Colab
+disconnects and to capture training footage. The run completed the assignment
+limit of 5,000,000 environment steps:
+
+```text
+run_id: local_sac_cpu_5m_seed3407
+config: configs/sac_humanoid_cpu_probe.json
+platform: local Windows CPU
+target_steps: 5000000
+best_checkpoint_step: 5000000
+checkpoint_sweep_mean_reward: 6784.349
+checkpoint_sweep_std_reward: 21.355
+checkpoint_sweep_min_reward: 6757.746
+checkpoint_sweep_max_reward: 6809.433
+checkpoint_sweep_mean_length: 1000.0
+```
+
+This is the strongest checkpoint sweep result so far. It should replace the
+current SAC 4.0M final candidate only after formal 10-seed evaluation with:
+
+```bash
+python evaluate.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seeds 0 1 2 3 4 5 6 7 8 9 --episodes-per-seed 1 --device cpu
+python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+```
