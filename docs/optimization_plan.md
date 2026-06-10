@@ -104,3 +104,20 @@ configs/sac_humanoid_obsnorm.json
 Run only a 1,000,000-step comparison first. Continue a SAC branch to 5,000,000
 steps only if its early result is competitive with the current final candidate.
 See `docs/sac_and_video.md` for exact commands.
+
+Observed CPU probe result:
+
+```text
+run_id: 20260605_153005_seed3407_sac_humanoid_cpu_probe
+actual_steps: 200000
+mean_reward: 896.367
+std_reward: 302.616
+min_reward: 560.438
+max_reward: 1398.884
+mean_length: 178.6
+seed_123_reward: 952.200
+```
+
+Conclusion: SAC is promising at low step count, but the CPU-only training speed
+is too slow for a long free-Colab run. Keep the PPO RL Zoo-style 5M checkpoint
+as the final candidate unless a future GPU-backed SAC run exceeds `2179.016`.

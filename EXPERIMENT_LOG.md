@@ -15,6 +15,7 @@
 | 20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel | 2026-06-05 | `82896dc` | `configs/ppo_humanoid_rlzoo_parallel.json` | 3407 | 1000000 | 1000000 | 4 | 1250 | 250 | Colab CPU | 886.012 | RL Zoo-style PPO branch, seeds 0-4, std 149.381, mean length 144.4, seed 123 reward 900.899; competitive 1M result, continue to 5M and sweep checkpoints |
 | 20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel | 2026-06-05 | `e5ee03b` | `configs/ppo_humanoid_rlzoo_parallel.json` | 3407 | 5000000 | 5000000 checkpoint | 4 | 1250 | 250 | Colab CPU eval | 2275.000 | Checkpoint sweep result, seeds 0-4, std 814.137, mean length 245.4; best checkpoint in sweep, requires formal 10-seed evaluation before replacing final candidate |
 | 20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel | 2026-06-05 | `3596d98` | `configs/ppo_humanoid_rlzoo_parallel.json` | 3407 | 5000000 | 5000000 checkpoint | 4 | 1250 | 250 | Colab CPU eval | 2179.016 | Formal 10-seed evaluation, seeds 0-9, std 666.613, mean length 237.8, seed 123 reward 2596.866; replaces previous final candidate |
+| 20260605_153005_seed3407_sac_humanoid_cpu_probe | 2026-06-05 | `31bf771` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 200000 | 200000 | 1 | N/A | 256 | Colab CPU | 896.367 | SAC CPU probe, seeds 0-4, std 302.616, mean length 178.6, seed 123 reward 952.200; promising but far below current PPO final candidate |
 
 ## 记录规范
 
