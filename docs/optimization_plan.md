@@ -243,3 +243,22 @@ Conclusion: the SAC 1.9M checkpoint replaces the SAC 900k checkpoint as the
 final candidate. It is stable across the 10 evaluation seeds, reaches the
 1000-step episode limit on every evaluated episode, and remains far below the
 5M environment interaction limit.
+
+Continuation to 5M produced a stronger checkpoint sweep candidate:
+
+```text
+run_id: colab_sac_cpu_probe_200k_seed3407
+target_steps: 5000000
+best_checkpoint_step: 4000000
+platform: Colab CPU
+config: configs/sac_humanoid_cpu_probe.json
+mean_reward: 6217.259
+std_reward: 32.654
+min_reward: 6154.199
+max_reward: 6247.676
+mean_length: 1000.0
+```
+
+Conclusion: the SAC 4.0M checkpoint is the best checkpoint from the 5M sweep
+reported so far and should receive a formal 10-seed evaluation. Do not replace
+the SAC 1.9M final candidate until that formal evaluation confirms the gain.
