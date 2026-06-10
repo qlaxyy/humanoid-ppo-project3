@@ -113,6 +113,24 @@ The second script does not import Stable-Baselines3 or load the neural-network
 model. It only replays the saved action sequence, which avoids model/rendering
 backend conflicts on Colab.
 
+The 80-step probe is expected to be short: at 30 fps it lasts about 2.7 seconds.
+For a full policy episode, export without `--max-steps`:
+
+```bash
+python export_trajectory.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python render_latest_trajectory.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --backend egl --fps 10
+```
+
+For a longer visual demonstration, repeat the latest exported trajectory:
+
+```bash
+python render_latest_trajectory.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --backend egl --fps 10 --repeat 3
+```
+
+For the assignment's requested five-minute process videos, screen-recording the
+Colab notebook while running the training/evaluation commands is more suitable
+than trying to stretch a short environment episode to five minutes.
+
 General form:
 
 ```bash

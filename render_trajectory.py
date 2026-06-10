@@ -33,6 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--backend", choices=["egl", "osmesa", "glfw"], default=None)
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--max-steps", type=int, default=None)
+    parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--frames-only", action="store_true")
     parser.add_argument("--local-video-workdir", type=Path, default=None)
     return parser.parse_args()
@@ -88,21 +89,36 @@ def main() -> int:
             if args.frames_only:
                 imageio.imwrite(video_dir / f"{prefix}-frame-0000.png", frame)
 
-            for action in actions:
-                if args.max_steps is not None and length >= int(args.max_steps):
-                    truncated = True
-                    break
-                _, reward, terminated, truncated, _ = env.step(action)
-                total_reward += float(reward)
-                length += 1
-                frame = env.render()
-                if writer is not None:
-                    writer.append_data(frame)
-                if args.frames_only:
-                    imageio.imwrite(video_dir / f"{prefix}-frame-{length:04d}.png", frame)
-                if length % 50 == 0:
-                    print(f"  rendered {length} steps", flush=True)
-                if terminated or truncated:
+            repeat_count = max(1, int(args.repeat))
+            for repeat_index in range(repeat_count):
+                if repeat_index > 0:
+                    env.reset(seed=seed)
+                    frame = env.render()
+                    if writer is not None:
+                        writer.append_data(frame)
+                    if args.frames_only:
+                        imageio.imwrite(video_dir / f"{prefix}-frame-{length:04d}.png", frame)
+
+                for action in actions:
+                    if args.max_steps is not None and length >= int(args.max_steps):
+                        truncated = True
+                        break
+                    _, reward, terminated, truncated, _ = env.step(action)
+                    total_reward += float(reward)
+                    length += 1
+                    frame = env.render()
+                    if writer is not None:
+                        writer.append_data(frame)
+                    if args.frames_only:
+                        imageio.imwrite(video_dir / f"{prefix}-frame-{length:04d}.png", frame)
+                    if length % 50 == 0:
+                        print(f"  rendered {length} steps", flush=True)
+                    if terminated or truncated:
+                        break
+
+                if terminated or truncated or (
+                    args.max_steps is not None and length >= int(args.max_steps)
+                ):
                     break
         finally:
             if writer is not None:
