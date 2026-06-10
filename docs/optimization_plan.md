@@ -34,9 +34,32 @@ python train.py --config configs/ppo_humanoid_rlzoo_parallel.json --target-steps
 python evaluate.py --run-dir runs/<run_id> --seeds 0 1 2 3 4 --episodes-per-seed 1 --device cpu
 ```
 
+Observed 1,000,000-step result:
+
+```text
+run_id: 20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel
+mean_reward: 886.012
+std_reward: 149.381
+mean_length: 144.4
+seed_123_reward: 900.899
+```
+
 Decision rule:
 
 - If 1M mean reward is clearly below the current baseline, stop this branch.
 - If 1M mean reward is competitive, train to 5M and sweep checkpoints.
 - Replace the final candidate only if the 10-seed checkpoint evaluation exceeds `927.009`.
 
+The 1M result is competitive, so continue this branch:
+
+```bash
+python train.py --resume-from runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --target-steps 5000000 --device cpu
+python evaluate_checkpoints.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --every 500000 --seeds 0 1 2 3 4 --device cpu
+```
+
+After the sweep, formally evaluate the best checkpoint:
+
+```bash
+python evaluate.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step <best_step> --seeds 0 1 2 3 4 5 6 7 8 9 --episodes-per-seed 1 --device cpu
+python test.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step <best_step> --seed 123 --episodes 1 --device cpu
+```

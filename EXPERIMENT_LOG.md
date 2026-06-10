@@ -12,6 +12,7 @@
 | 20260605_031927_seed3407_ppo_humanoid_colab | 2026-06-05 | `73afbd7` | `configs/ppo_humanoid_colab.json` | 3407 | 5000000 | 5000000 | 4 | 1250 | 250 | Colab T4 GPU | 714.891 | Same baseline continued to 5M, seeds 0-4, std 73.373, mean length 142.8, seed 123 reward 1247.017; final checkpoint worse than 1M |
 | 20260605_031927_seed3407_ppo_humanoid_colab | 2026-06-05 | `7305160` | `configs/ppo_humanoid_colab.json` | 3407 | 5000000 | 4500000 checkpoint | 4 | 1250 | 250 | Colab CPU eval | 980.384 | Best checkpoint sweep result, seeds 0-4, std 144.320, mean length 195.8; candidate submission checkpoint |
 | 20260605_031927_seed3407_ppo_humanoid_colab | 2026-06-05 | `f0ca6f5` | `configs/ppo_humanoid_colab.json` | 3407 | 5000000 | 4500000 checkpoint | 4 | 1250 | 250 | Colab CPU eval | 927.009 | Formal 10-seed evaluation, seeds 0-9, std 173.737, mean length 186.5, seed 123 reward 1331.420 |
+| 20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel | 2026-06-05 | `82896dc` | `configs/ppo_humanoid_rlzoo_parallel.json` | 3407 | 1000000 | 1000000 | 4 | 1250 | 250 | Colab CPU | 886.012 | RL Zoo-style PPO branch, seeds 0-4, std 149.381, mean length 144.4, seed 123 reward 900.899; competitive 1M result, continue to 5M and sweep checkpoints |
 
 ## 记录规范
 
