@@ -108,8 +108,9 @@ def main() -> int:
     print(
         "python train_sac.py "
         f"--resume-from {demo_run} "
+        f"--resume-step {source_step} "
         f"--target-steps {target_steps} "
-        "--device cpu --verbose --status-freq 5000 "
+        "--device cpu --quiet --no-progress-bar --status-freq 5000 "
         "--checkpoint-freq 50000 --eval-freq 50000"
     )
     return 0
