@@ -21,6 +21,7 @@
 | colab_sac_cpu_probe_200k_seed3407 | 2026-06-06 | `65a1694` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 200000 | 200000 | 1 | N/A | 256 | Colab CPU | 579.108 | Same SAC cpu_probe config rerun on Colab, seeds 0-4, std 55.303, mean length 113.4, seed 123 reward 620.384; below continuation threshold |
 | colab_sac_cpu_probe_200k_seed3407 | 2026-06-06 | `efd8770` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 1000000 | 1000000 | 1 | N/A | 256 | Colab CPU | 1520.323 | SAC continued to 1M, seeds 0-4, std 909.567, mean length 282.0, seed 123 reward 2816.869; improved but still below PPO final candidate on mean reward |
 | colab_sac_cpu_probe_200k_seed3407 | 2026-06-06 | `efd8770` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 1000000 | 900000 checkpoint | 1 | N/A | 256 | Colab CPU eval | 5379.517 | SAC 900k checkpoint formal 10-seed evaluation, std 129.155, mean length 993.6, seed 123 reward 4472.476; replaces PPO final candidate |
+| colab_sac_cpu_probe_200k_seed3407 | 2026-06-06 | `907a4b9` | `configs/sac_humanoid_cpu_probe.json` | 3407 | 2000000 | 1900000 checkpoint | 1 | N/A | 256 | Colab CPU eval | 5983.969 | SAC 1.9M checkpoint formal 10-seed evaluation, std 25.421, min 5943.729, max 6027.610, mean length 1000.0, seed 123 reward 5997.139; replaces SAC 900k final candidate |
 
 ## 记录规范
 

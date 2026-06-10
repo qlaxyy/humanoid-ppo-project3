@@ -6,12 +6,12 @@ SAC is an off-policy maximum-entropy algorithm for continuous control. It is a
 reasonable paper-reproduction branch after the PPO and RL Zoo-style PPO
 experiments.
 
-The current final candidate remains:
+The current final candidate is:
 
 ```text
-run_id: 20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel
-checkpoint_step: 5000000
-10-seed mean_reward: 2179.016
+run_id: colab_sac_cpu_probe_200k_seed3407
+checkpoint_step: 1900000
+10-seed mean_reward: 5983.969
 ```
 
 Run SAC only as a new independent branch. Do not continue training any submitted
@@ -71,7 +71,7 @@ loading the trained model, rendering `Humanoid-v5`, and saving an mp4 file.
 For the current final candidate:
 
 ```bash
-python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python record_video.py --run-dir runs/colab_sac_cpu_probe_200k_seed3407 --checkpoint-step 1900000 --seed 123 --episodes 1 --device cpu
 ```
 
 On Colab, MuJoCo rendering should use a headless OpenGL backend. First test
@@ -84,7 +84,7 @@ python render_probe.py --backend egl --output videos/render_probe_egl.png
 If that works, record a short model video:
 
 ```bash
-python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --max-steps 80
+python record_video.py --run-dir runs/colab_sac_cpu_probe_200k_seed3407 --checkpoint-step 1900000 --seed 123 --episodes 1 --device cpu --max-steps 80
 ```
 
 The script writes mp4 files to a local `/content` temporary directory first,
@@ -94,7 +94,7 @@ ffmpeg output directly into Google Drive.
 If that works, record the full episode:
 
 ```bash
-python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python record_video.py --run-dir runs/colab_sac_cpu_probe_200k_seed3407 --checkpoint-step 1900000 --seed 123 --episodes 1 --device cpu
 ```
 
 If EGL still hangs, try OSMesa after installing its runtime package in Colab:
@@ -103,21 +103,21 @@ If EGL still hangs, try OSMesa after installing its runtime package in Colab:
 apt-get update
 apt-get install -y libosmesa6
 MUJOCO_GL=osmesa python render_probe.py --backend osmesa --output videos/render_probe_osmesa.png
-MUJOCO_GL=osmesa python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --backend osmesa --max-steps 80
+MUJOCO_GL=osmesa python record_video.py --run-dir runs/colab_sac_cpu_probe_200k_seed3407 --checkpoint-step 1900000 --seed 123 --episodes 1 --device cpu --backend osmesa --max-steps 80
 ```
 
 If mp4 writing still fails, save PNG frames only:
 
 ```bash
-python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --max-steps 80 --frames-only
+python record_video.py --run-dir runs/colab_sac_cpu_probe_200k_seed3407 --checkpoint-step 1900000 --seed 123 --episodes 1 --device cpu --max-steps 80 --frames-only
 ```
 
 If rendering hangs only after loading the SB3 model, split policy execution and
 rendering into two processes:
 
 ```bash
-python export_trajectory.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --max-steps 80
-python render_trajectory.py --trajectory runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel/trajectories/<trajectory_file>.npz --backend egl
+python export_trajectory.py --run-dir runs/colab_sac_cpu_probe_200k_seed3407 --checkpoint-step 1900000 --seed 123 --episodes 1 --device cpu --max-steps 80
+python render_trajectory.py --trajectory runs/colab_sac_cpu_probe_200k_seed3407/trajectories/<trajectory_file>.npz --backend egl
 ```
 
 The second script does not import Stable-Baselines3 or load the neural-network
@@ -128,14 +128,14 @@ The 80-step probe is expected to be short: at 30 fps it lasts about 2.7 seconds.
 For a full policy episode, export without `--max-steps`:
 
 ```bash
-python export_trajectory.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
-python render_latest_trajectory.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --backend egl --fps 10
+python export_trajectory.py --run-dir runs/colab_sac_cpu_probe_200k_seed3407 --checkpoint-step 1900000 --seed 123 --episodes 1 --device cpu
+python render_latest_trajectory.py --run-dir runs/colab_sac_cpu_probe_200k_seed3407 --backend egl --fps 10
 ```
 
 For a longer visual demonstration, repeat the latest exported trajectory:
 
 ```bash
-python render_latest_trajectory.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --backend egl --fps 10 --repeat 3
+python render_latest_trajectory.py --run-dir runs/colab_sac_cpu_probe_200k_seed3407 --backend egl --fps 10 --repeat 3
 ```
 
 For the assignment's requested five-minute process videos, screen-recording the

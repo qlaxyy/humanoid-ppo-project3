@@ -223,3 +223,23 @@ seed_123_reward: 4472.476
 Conclusion: the SAC 900k checkpoint replaces the PPO RL Zoo-style checkpoint
 as the final candidate. It is both higher scoring and trained with only 900k
 environment interactions, well below the 5M assignment limit.
+
+Continuation to 2M found a stronger SAC checkpoint:
+
+```text
+run_id: colab_sac_cpu_probe_200k_seed3407
+checkpoint_step: 1900000
+platform: Colab CPU
+config: configs/sac_humanoid_cpu_probe.json
+mean_reward: 5983.969
+std_reward: 25.421
+min_reward: 5943.729
+max_reward: 6027.610
+mean_length: 1000.0
+seed_123_reward: 5997.139
+```
+
+Conclusion: the SAC 1.9M checkpoint replaces the SAC 900k checkpoint as the
+final candidate. It is stable across the 10 evaluation seeds, reaches the
+1000-step episode limit on every evaluated episode, and remains far below the
+5M environment interaction limit.

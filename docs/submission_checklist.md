@@ -1,5 +1,14 @@
 # Submission Checklist
 
+## Current Final Policy
+
+- Final run: `runs/colab_sac_cpu_probe_200k_seed3407`
+- Final policy file: `runs/colab_sac_cpu_probe_200k_seed3407/models/checkpoint_model_1900000_steps.zip`
+- Final algorithm: SAC
+- Final checkpoint step: `1900000`
+- VecNormalize artifact: not required, because this SAC configuration does not use observation/reward normalization.
+- Formal evaluation: `runs/colab_sac_cpu_probe_200k_seed3407/evaluations/raw_eval_20260606_155815.json`
+
 提交前逐项检查。
 
 ## 代码
