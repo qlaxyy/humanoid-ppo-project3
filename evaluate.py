@@ -64,6 +64,8 @@ def main() -> int:
                 f"observations, but this file is missing: {vecnormalize_path}"
             )
         vecnormalize_path = None
+    elif vecnormalize_path is not None and not vecnormalize_path.exists():
+        vecnormalize_path = None
 
     model = load_model_for_config(model_path, config, device=args.device)
     normalizer = load_vecnormalize_for_inference(vecnormalize_path)
