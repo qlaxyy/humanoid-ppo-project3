@@ -2,15 +2,22 @@
 
 ## 1. 任务背景
 
-本次作业要求在 Gymnasium MuJoCo `Humanoid-v5` 环境中训练强化学习智能体，使三维人形机器人在保持平衡的同时尽可能向前运动。该任务属于高维连续控制问题：智能体需要根据身体姿态、速度、关节受力等观测信息，输出连续动作来控制多个关节的力矩。
+本次作业要求在 Gymnasium MuJoCo `Humanoid-v5` 环境中训练强化学习智能体，使三维人形机器人在保持平衡的同时尽可能向前移动。该任务属于高维连续控制问题：智能体需要根据身体姿态、速度、关节状态和外力等观测信息，输出连续动作来控制多个关节。
 
-`Humanoid-v5` 的动作空间为 17 维连续动作，观测空间默认约为 348 维。环境原始奖励主要由存活奖励、向前速度奖励、控制代价和接触代价组成。最终评测成绩以原生环境 `step()` 返回的原始奖励累计值为准，训练过程中可以使用不同算法和训练技巧，但最终评估不使用归一化后的奖励作为成绩。
+作业最终成绩以原生环境 `step()` 返回的原始累计奖励为准，因此训练过程可以使用不同算法、不同日志方式和 checkpoint 策略，但最终评估必须加载训练好的 policy，在 `Humanoid-v5` 原生环境中统计 raw reward。项目未修改环境物理参数、奖励函数或 `step()` 返回值。
 
-本任务的难点主要包括：状态维度高、动作维度高、机器人容易摔倒、训练结果对随机种子和训练过程较敏感，以及长时间训练容易受到平台中断影响。
+训练和提交过程中重点满足以下要求：
+
+- 做好版本管理，代码改动通过 Git 记录。
+- 做好实验记录，保存配置、checkpoint、评估 CSV/JSON 和关键截图。
+- 保证可复现，固定依赖版本、训练 seed、评估 seed 和训练步数。
+- 严格遵守 5,000,000 环境交互步上限。
+- 提交训练好的 policy 文件，便于助教加载测试。
+- 按补充通知提交训练过程分段视频、最终结果截图和说明。
 
 ## 2. 环境与依赖
 
-实验环境固定为：
+最终实验环境如下：
 
 ```text
 env_id: Humanoid-v5
@@ -21,22 +28,31 @@ torch==2.7.1
 numpy==2.2.6
 ```
 
-完整依赖记录在 `requirements.txt` 中。最终模型在本地 Windows + Conda CPU 环境中完成训练：
+依赖版本记录在 `requirements.txt` 中。最终模型在本地 Windows + Conda CPU 环境中训练完成：
 
 ```text
-Python: 3.12.13
+Python: 3.12
 Platform: Windows 11
-CUDA: not used
+Device: CPU
 training seed: 3407
+run_id: local_sac_cpu_5m_seed3407
 ```
 
-本项目未修改 Gymnasium/MuJoCo 源码，也没有修改环境物理参数、奖励函数或 `step()` 返回值。
+早期也尝试过 Colab 和 Kaggle。Colab/Kaggle 适合快速验证和使用云端资源，但存在断连、运行时重置、GPU 限额、输出不易回看等问题。最终选择本地 CPU 完成完整 5,000,000 步训练，主要原因是本地训练不中断、便于录屏、便于保存所有 checkpoint。
 
-## 3. 方法
+## 3. 方法选择
 
-本项目先后尝试了 PPO、RL Zoo 风格 PPO、SAC 和 TD3 探针实验。最终采用 Soft Actor-Critic（SAC）算法。SAC 是一种最大熵 off-policy actor-critic 方法，适用于连续动作控制任务。它在优化累计奖励的同时鼓励策略保持一定随机性，从而提升探索能力和训练稳定性。
+本项目先后尝试了 PPO、RL Zoo 风格 PPO、SAC 和 TD3。最终采用 Soft Actor-Critic (SAC)。
 
-最终 SAC 配置如下：
+SAC 是一种最大熵 off-policy actor-critic 算法，适合连续动作控制任务。它同时优化累计奖励和策略熵，既追求高奖励，也保留一定探索能力。与 PPO 相比，SAC 能复用经验回放池中的历史样本，在本任务中表现出更高的样本效率和更好的最终分数。
+
+最终配置文件为：
+
+```text
+configs/sac_humanoid_cpu_probe.json
+```
+
+核心参数如下：
 
 ```text
 algorithm: SAC
@@ -56,52 +72,72 @@ normalize_observation: false
 normalize_reward: false
 ```
 
-最终训练 run 为：
+最终 SAC 模型没有使用 VecNormalize，因此提交和测试时只需要 policy checkpoint，不需要额外加载归一化统计文件。
 
-```text
-run_id: local_sac_cpu_5m_seed3407
-target_steps: 5,000,000
-selected_checkpoint: 5,000,000 steps
+## 4. 版本管理与实验记录
+
+项目采用 Git 管理代码。主要做法包括：
+
+- 代码、配置、脚本和文档进入 Git。
+- `runs/` 下的训练结果、模型 checkpoint、评估输出和视频作为实验产物保存，不作为普通代码提交。
+- 每个 run 保存 `config.json` 和 `metadata.json`，记录训练配置、运行命令、目标步数和最后训练步数。
+- 定期保存 checkpoint，支持中断后继续训练，也便于后续扫描不同训练阶段的模型。
+- 使用 `evaluate.py`、`evaluate_checkpoints.py`、`test.py` 将评估结果保存为 CSV/JSON，方便报告引用和复查。
+
+训练脚本支持两种输出模式：
+
+- 多输出模式：用于录屏展示，开启进度条和指标表，较高频输出 reward、episode length、fps 和训练损失。
+- 安静输出模式：用于长时间训练，关闭进度条并低频输出，避免终端输出过多。
+
+## 5. 分段训练命令
+
+下面四段命令使用同一个 run 名称 `local_sac_cpu_5m_seed3407`，按顺序运行即可复现完整训练流程。
+
+### 5.1 0 到 100,000 步：多输出模式
+
+用于展示训练开始阶段。
+
+```bat
+python train_sac.py --config configs/sac_humanoid_cpu_probe.json --target-steps 100000 --device cpu --quiet --progress-bar --status-freq 1000 --metric-table --checkpoint-freq 50000 --eval-freq 50000 --run-name local_sac_cpu_5m_seed3407
 ```
 
-SAC 最终模型没有使用 VecNormalize，因此提交和测试时不需要额外加载归一化统计文件。
+### 5.2 100,000 到 2,900,000 步：安静输出模式
 
-## 4. 可复现性设计
+用于完成较长的中前期训练。
 
-为保证实验可复现，项目中采取了以下措施：
-
-- 固定依赖版本，并在 `requirements.txt` 中记录。
-- 固定环境为 `Humanoid-v5`。
-- 固定训练随机种子 `seed=3407`。
-- 测试脚本支持命令行传入 seed，并通过 `env.reset(seed=...)` 控制评估初始状态。
-- 训练步数不超过作业规定的 `5,000,000` 环境交互步。
-- 每隔固定步数保存 checkpoint，便于断点恢复和回溯选择最佳模型。
-- 使用 `evaluate.py` 输出多 seed 原始累计奖励，避免只依赖单个 seed。
-- 最终模型直接提交 policy checkpoint 文件，便于助教加载测试。
-
-需要说明的是，深度强化学习训练过程存在一定非确定性，尤其是 off-policy 算法、神经网络初始化、经验回放采样和硬件平台差异都可能造成训练轨迹差异。因此本项目最终以提交的 policy checkpoint 在原生环境中的 raw reward 评估结果为准。
-
-## 5. 实验过程
-
-### 5.1 PPO 基线
-
-最初使用 PPO 作为基线算法。PPO 能够跑通完整训练、保存和评估流程，但在 Humanoid-v5 上分数较低。普通 PPO 100 万步评估约为 833；继续训练到 500 万步后，最终模型反而退化，checkpoint sweep 中较好的 PPO 模型也明显低于后续 SAC。
-
-### 5.2 RL Zoo 风格 PPO
-
-随后参考 RL Baselines3 Zoo 风格的 Humanoid PPO 参数进行调参。该分支比普通 PPO 明显更强，500 万步 checkpoint 的正式 10-seed 平均原始奖励为：
-
-```text
-mean_reward: 2179.016
+```bat
+python train_sac.py --resume-from runs/local_sac_cpu_5m_seed3407 --resume-step 100000 --target-steps 2900000 --device cpu --quiet --no-progress-bar --status-freq 100000 --checkpoint-freq 100000 --eval-freq 100000
 ```
 
-该结果曾作为中间候选模型，但仍未达到稳定走满 1000 步的水平。
+### 5.3 2,900,000 到 3,000,000 步：多输出模式
 
-### 5.3 SAC 实验
+用于展示训练中期阶段。
 
-SAC 初期结果波动较大，早期 20 万步实验在不同平台上表现差异明显。继续训练后，SAC 在约 90 万步附近开始出现稳定走满 1000 步的 checkpoint。后续训练到 500 万步并进行 checkpoint sweep，最终本地 CPU 训练得到的 500 万步 checkpoint 表现最好。
+```bat
+python train_sac.py --resume-from runs/local_sac_cpu_5m_seed3407 --resume-step 2900000 --target-steps 3000000 --device cpu --quiet --progress-bar --status-freq 1000 --metric-table --checkpoint-freq 50000 --eval-freq 50000
+```
 
-本地 500 万步 checkpoint sweep 的前几名如下：
+### 5.4 3,000,000 到 5,000,000 步：安静输出模式
+
+用于完成最终训练并保存最终 policy。
+
+```bat
+python train_sac.py --resume-from runs/local_sac_cpu_5m_seed3407 --resume-step 3000000 --target-steps 5000000 --device cpu --quiet --no-progress-bar --status-freq 100000 --checkpoint-freq 100000 --eval-freq 100000
+```
+
+## 6. 测试与模型选择流程
+
+训练完成后没有直接只使用最后一个模型，而是先扫描多个 checkpoint 进行初筛，再对最佳 checkpoint 进行正式测试。
+
+### 6.1 Checkpoint 初筛
+
+使用 `evaluate_checkpoints.py` 扫描保存的 checkpoint。初筛阶段使用 seeds `0 1 2 3 4`，每个 seed 测试 1 个 episode，并按 mean reward 排序。
+
+```bat
+python evaluate_checkpoints.py --run-dir runs/local_sac_cpu_5m_seed3407 --every 100000 --seeds 0 1 2 3 4 --episodes-per-seed 1 --device cpu
+```
+
+本地 5,000,000 步训练完成后的 checkpoint sweep 前几名如下：
 
 ```text
 step       mean_reward   std_reward   mean_length
@@ -112,27 +148,17 @@ step       mean_reward   std_reward   mean_length
 4300000   6642.718      21.127       1000.0
 ```
 
-最终选择 `5000000` 步 checkpoint 作为提交模型。
+初筛结果显示 `5000000` 步 checkpoint 表现最好，因此选择它作为最终提交 policy。
 
-### 5.4 TD3 探针
+### 6.2 正式 10-seed 测试
 
-本项目还尝试了 TD3 fast probe。TD3 是经典的连续控制 off-policy 方法，但在本机 CPU 上早期训练速度低于 SAC，且没有表现出比 SAC 更有利的趋势，因此未作为最终方案。
+对初筛选出的 `5000000` 步 checkpoint 进行正式 10-seed 原始累计奖励评估：
 
-## 6. 最终结果
-
-最终 policy 文件为：
-
-```text
-runs/local_sac_cpu_5m_seed3407/models/checkpoint_model_5000000_steps.zip
-```
-
-正式 10-seed 原始累计奖励评估命令：
-
-```bash
+```bat
 python evaluate.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seeds 0 1 2 3 4 5 6 7 8 9 --episodes-per-seed 1 --device cpu
 ```
 
-评估结果：
+结果如下：
 
 ```text
 episodes: 10
@@ -143,20 +169,22 @@ max_reward: 6817.721
 mean_length: 1000.0
 ```
 
-各 seed 结果：
+各 seed 奖励如下：
 
 ```text
 [6809.433, 6802.217, 6791.833, 6757.746, 6760.515,
  6754.391, 6760.397, 6798.800, 6817.721, 6753.711]
 ```
 
-固定 `seed=123` 的测试命令：
+### 6.3 固定 seed 单次测试
 
-```bash
+另外使用固定 `seed=123` 进行单次测试，便于视频和截图展示：
+
+```bat
 python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
 ```
 
-测试结果：
+结果如下：
 
 ```text
 raw_reward: 6780.809
@@ -165,33 +193,70 @@ terminated: False
 truncated: True
 ```
 
-这说明最终模型能够稳定运行到环境默认最大 episode 长度，并获得较高的原始累计奖励。
+`length=1000` 且 `truncated=True` 表示策略能够稳定运行到环境默认最大 episode 长度，而不是提前摔倒终止。
 
-## 7. 分析与讨论
+## 7. 视频生成与录屏说明
 
-从实验结果看，SAC 明显优于本项目中尝试的 PPO 和 TD3 分支。PPO 在 Humanoid-v5 上虽然训练稳定、速度较快，但较难获得高分；SAC 在早期波动较大，但一旦学会稳定步态后，收益提升明显。
+根据作业补充通知，训练过程视频采用分段录制方式：训练开始片段、中期片段、尾声截图和最终测试结果。分段训练命令见第 5 节。
 
-训练过程中观察到一个重要现象：强化学习 checkpoint 表现并不一定随训练步数单调提升。早期 SAC 在 90 万步、190 万步和 400 万步均出现过强 checkpoint，最终本地训练的 500 万步 checkpoint 达到当前最高分。因此本项目采用 checkpoint sweep 方式选择最终模型，而不是简单使用 `latest_model.zip`。
+最终 policy 的行走视频可以用两种方式生成。
 
-本地 CPU 训练虽然耗时较长，但避免了 Colab/Kaggle 断连问题，也更方便录制训练过程。最终模型在 10 个不同测试 seed 上均达到 1000 步，说明策略已经较稳定，不只是对单个 seed 过拟合。
+### 7.1 直接录制 policy 视频
 
-## 8. 提交材料说明
+在本地 Windows 环境中可使用 `glfw` 后端：
 
-建议提交以下文件和材料：
+```bat
+python record_video.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --backend glfw --fps 20
+```
+
+视频保存目录：
+
+```text
+runs/local_sac_cpu_5m_seed3407/videos/
+```
+
+### 7.2 先导出轨迹再渲染
+
+如果直接渲染遇到 MuJoCo/OpenGL 后端问题，可以先导出动作轨迹，再单独渲染：
+
+```bat
+python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+```
+
+```bat
+python render_latest_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --backend glfw --fps 20 --repeat 3
+```
+
+这种方式将 policy 执行和 MuJoCo 渲染拆开，稳定性更好。渲染结果保存在：
+
+```text
+runs/local_sac_cpu_5m_seed3407/trajectories/videos/
+```
+
+## 8. 实验结果与分析
+
+从实验结果看，SAC 明显优于本项目尝试过的 PPO 和 TD3 分支。PPO 可以跑通完整流程，但在 Humanoid-v5 上分数较低。RL Zoo 风格 PPO 的 5,000,000 步候选模型正式 10-seed 平均奖励约为 `2179.016`，仍明显低于最终 SAC 模型。TD3 早期探针在本地 CPU 上训练速度和效果均不如 SAC，因此未作为最终方向。
+
+SAC 的早期训练波动较大，但随着训练继续，策略逐渐学会稳定步态。训练中也观察到 checkpoint 表现并非严格随步数单调提升，因此使用 checkpoint sweep 选择最终模型是必要的。本次最终本地训练中，5,000,000 步 checkpoint 在初筛和正式测试中均表现最好。
+
+最终模型在 10 个不同测试 seed 下均达到 `mean_length=1000.0`，说明策略不是只对单个 seed 有效，而是在不同初始条件下都能稳定走完整个 episode。最终 10-seed mean reward 为 `6780.676`，固定 seed=123 raw reward 为 `6780.809`。
+
+## 9. 提交材料
+
+建议提交以下内容：
 
 - 完整源代码。
 - `requirements.txt`。
+- 本报告。
+- 视频说明文档 `docs/video_explanation.md`。
 - 最终 policy 文件：
   `runs/local_sac_cpu_5m_seed3407/models/checkpoint_model_5000000_steps.zip`
-- 最终评估结果：
-  `runs/local_sac_cpu_5m_seed3407/evaluations/raw_eval_20260608_101517.json`
-  和对应 CSV。
-- 报告 PDF。
-- 训练过程分段录屏，总时长约 10 分钟。
-- 最终结果截图，包括训练结束截图、`evaluate.py` 输出截图、`test.py` 输出截图。
-- 可选：最终策略行走视频。
+- checkpoint 初筛结果 CSV/JSON。
+- 正式 10-seed 评估结果 CSV/JSON。
+- 训练开始、中期、尾声截图或分段录屏。
+- 最终 policy 行走视频。
 
-## 9. 参考资料
+## 10. 参考资料
 
 - Gymnasium Humanoid-v5 documentation: https://gymnasium.farama.org/environments/mujoco/humanoid/
 - Soft Actor-Critic: https://arxiv.org/abs/1801.01290
