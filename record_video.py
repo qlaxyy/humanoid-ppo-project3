@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import os
 from dataclasses import asdict
 from pathlib import Path
+
+# Colab and most remote runners do not have an X11 display. Select MuJoCo's
+# headless EGL backend before importing Gymnasium/MuJoCo rendering code.
+os.environ.setdefault("MUJOCO_GL", "egl")
 
 import gymnasium as gym
 from gymnasium.wrappers import RecordVideo

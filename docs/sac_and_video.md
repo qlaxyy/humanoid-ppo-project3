@@ -63,6 +63,14 @@ For the current final candidate:
 python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
 ```
 
+On Colab, MuJoCo rendering should use a headless OpenGL backend. The script sets
+`MUJOCO_GL=egl` by default before importing Gymnasium. If rendering still fails,
+run the same command with the environment variable explicitly set:
+
+```bash
+MUJOCO_GL=egl python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+```
+
 General form:
 
 ```bash
