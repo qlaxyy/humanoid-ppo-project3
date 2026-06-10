@@ -121,3 +121,22 @@ seed_123_reward: 952.200
 Conclusion: SAC is promising at low step count, but the CPU-only training speed
 is too slow for a long free-Colab run. Keep the PPO RL Zoo-style 5M checkpoint
 as the final candidate unless a future GPU-backed SAC run exceeds `2179.016`.
+
+Observed Kaggle fast-probe result:
+
+```text
+run_id: 20260606_035618_seed3407_sac_humanoid_fast_probe
+platform: Kaggle T4 GPU
+config: configs/sac_humanoid_fast_probe.json
+actual_steps: 200000
+mean_reward: 481.650
+std_reward: 156.369
+min_reward: 233.665
+max_reward: 661.684
+mean_length: 99.2
+```
+
+Conclusion: this faster SAC variant is useful for wall-clock testing but learns
+too slowly under the current settings. Do not replace the PPO final candidate
+or continue this branch unless a later configuration shows a much stronger
+early score.
