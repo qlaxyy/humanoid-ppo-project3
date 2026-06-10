@@ -262,3 +262,23 @@ mean_length: 1000.0
 Conclusion: the SAC 4.0M checkpoint is the best checkpoint from the 5M sweep
 reported so far and should receive a formal 10-seed evaluation. Do not replace
 the SAC 1.9M final candidate until that formal evaluation confirms the gain.
+
+Formal 10-seed evaluation confirmed the SAC 4.0M checkpoint:
+
+```text
+run_id: colab_sac_cpu_probe_200k_seed3407
+checkpoint_step: 4000000
+platform: Colab CPU
+config: configs/sac_humanoid_cpu_probe.json
+mean_reward: 6192.997
+std_reward: 44.335
+min_reward: 6115.738
+max_reward: 6247.676
+mean_length: 1000.0
+seed_123_reward: 6167.959
+```
+
+Conclusion: the SAC 4.0M checkpoint replaces the SAC 1.9M checkpoint as the
+final candidate. The formal 10-seed evaluation confirms that all evaluated
+episodes reach the 1000-step limit and the score remains below the 5M
+environment interaction cap.
