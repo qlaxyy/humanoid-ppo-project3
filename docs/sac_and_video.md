@@ -33,6 +33,17 @@ python train_sac.py --config configs/sac_humanoid_obsnorm.json --target-steps 10
 python evaluate.py --run-dir runs/<sac_obsnorm_run_name> --seeds 0 1 2 3 4 --episodes-per-seed 1 --device cpu
 ```
 
+CPU-only SAC probe:
+
+```bash
+python train_sac.py --config configs/sac_humanoid_cpu_probe.json --target-steps 200000 --device auto
+python evaluate.py --run-dir runs/<sac_cpu_probe_run_name> --seeds 0 1 2 3 4 --episodes-per-seed 1 --device cpu
+```
+
+This probe reduces update frequency with `train_freq=4` and uses only 200,000
+steps. It is for deciding whether SAC is worth a longer GPU run, not for final
+submission.
+
 Continue a SAC branch only if its 1M result is competitive with the current
 candidate:
 
