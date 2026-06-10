@@ -195,3 +195,31 @@ Conclusion: SAC improved substantially after 1M steps, but the 5-seed mean is
 still below the PPO RL Zoo-style final candidate (`2179.016`) and the variance
 is high. Sweep SAC checkpoints before any longer run; continue to 5M only if a
 checkpoint evaluation is clearly competitive.
+
+Checkpoint sweep after the 1M SAC run:
+
+```text
+best_step: 900000
+mean_reward: 5421.415
+std_reward: 13.155
+min_reward: 5403.780
+max_reward: 5440.614
+mean_length: 1000.0
+```
+
+Formal 10-seed evaluation of the 900k checkpoint:
+
+```text
+run_id: colab_sac_cpu_probe_200k_seed3407
+checkpoint_step: 900000
+mean_reward: 5379.517
+std_reward: 129.155
+min_reward: 4993.352
+max_reward: 5440.614
+mean_length: 993.6
+seed_123_reward: 4472.476
+```
+
+Conclusion: the SAC 900k checkpoint replaces the PPO RL Zoo-style checkpoint
+as the final candidate. It is both higher scoring and trained with only 900k
+environment interactions, well below the 5M assignment limit.
