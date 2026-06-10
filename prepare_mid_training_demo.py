@@ -111,7 +111,7 @@ def main() -> int:
         f"--resume-step {source_step} "
         f"--target-steps {target_steps} "
         "--device cpu --quiet --no-progress-bar --status-freq 5000 "
-        "--checkpoint-freq 50000 --eval-freq 50000"
+        "--metric-table --checkpoint-freq 50000 --eval-freq 50000"
     )
     return 0
 

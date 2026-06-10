@@ -29,10 +29,10 @@ python prepare_mid_training_demo.py --source-run runs/local_sac_cpu_5m_seed3407 
 录制中期继续训练片段：
 
 ```bash
-python train_sac.py --resume-from runs/local_sac_mid_demo_2900k_to_3000k --resume-step 2900000 --target-steps 3000000 --device cpu --quiet --no-progress-bar --status-freq 5000 --checkpoint-freq 50000 --eval-freq 50000
+python train_sac.py --resume-from runs/local_sac_mid_demo_2900k_to_3000k --resume-step 2900000 --target-steps 3000000 --device cpu --quiet --no-progress-bar --status-freq 5000 --metric-table --checkpoint-freq 50000 --eval-freq 50000
 ```
 
-这里的 progress 行会输出普通小数格式的近期 episode 指标，例如：
+这里的 progress 行和指标表都会输出普通小数格式的近期 episode 指标，例如：
 
 ```text
 recent_ep_rew_mean=4432.123 recent_ep_len_mean=1000.0

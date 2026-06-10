@@ -56,6 +56,14 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Print one compact progress line every N environment steps.",
     )
+    parser.add_argument(
+        "--metric-table",
+        action="store_true",
+        help=(
+            "Print a recording-friendly metrics table with fixed-point reward "
+            "formatting at each status report."
+        ),
+    )
 
     parser.add_argument("--learning-rate", type=float, default=None)
     parser.add_argument("--batch-size", type=int, default=None)
@@ -355,6 +363,8 @@ def main() -> int:
                 ),
             ]
         )
+        if args.metric_table and (args.status_freq is None or args.status_freq <= 0):
+            args.status_freq = 5000
         if args.status_freq is not None and args.status_freq > 0:
             callbacks.callbacks.append(
                 ProgressReporterCallback(
@@ -362,6 +372,7 @@ def main() -> int:
                     start_steps=current_steps,
                     report_freq=int(args.status_freq),
                     status_path=run_dir / "progress.json",
+                    metric_table=bool(args.metric_table),
                 )
             )
 

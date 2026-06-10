@@ -87,12 +87,14 @@ class ProgressReporterCallback(BaseCallback):
         report_freq: int,
         status_path: Path,
         reward_window: int = 20,
+        metric_table: bool = False,
     ):
         super().__init__()
         self.target_steps = int(target_steps)
         self.start_steps = int(start_steps)
         self.report_freq = max(1, int(report_freq))
         self.status_path = Path(status_path)
+        self.metric_table = bool(metric_table)
         self.started_at = time.monotonic()
         self.last_report_steps = self.start_steps
         self.episode_rewards: deque[float] = deque(maxlen=max(1, int(reward_window)))
@@ -140,6 +142,116 @@ class ProgressReporterCallback(BaseCallback):
             if "l" in episode:
                 self.episode_lengths.append(float(episode["l"]))
 
+    @staticmethod
+    def _mean(values: deque[float]) -> float | None:
+        return sum(values) / len(values) if values else None
+
+    @staticmethod
+    def _format_metric(key: str, value: Any) -> str:
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        if isinstance(value, bool):
+            return str(value)
+        if isinstance(value, int):
+            return str(value)
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            return str(value)
+
+        integer_like_keys = (
+            "episodes",
+            "time_elapsed",
+            "total_timesteps",
+            "n_updates",
+        )
+        if any(key.endswith(name) for name in integer_like_keys):
+            return str(int(round(numeric)))
+        if key.endswith("fps"):
+            return f"{numeric:.1f}"
+        if key.endswith("ep_len_mean"):
+            return f"{numeric:.1f}"
+        if key.endswith("ep_rew_mean"):
+            return f"{numeric:.3f}"
+        if key.endswith("learning_rate"):
+            return f"{numeric:.6f}"
+        return f"{numeric:.3f}"
+
+    def _latest_logger_values(self) -> dict[str, Any]:
+        logger = getattr(self.model, "logger", None)
+        if logger is None:
+            return {}
+        values = getattr(logger, "name_to_value", {})
+        return dict(values) if isinstance(values, dict) else {}
+
+    def _print_metric_table(
+        self,
+        *,
+        elapsed: float,
+        fps: float,
+        recent_reward: float | None,
+        recent_length: float | None,
+    ) -> None:
+        logger_values = self._latest_logger_values()
+        train_values = {
+            "actor_loss": logger_values.get("train/actor_loss"),
+            "critic_loss": logger_values.get("train/critic_loss"),
+            "ent_coef": logger_values.get("train/ent_coef"),
+            "ent_coef_loss": logger_values.get("train/ent_coef_loss"),
+            "learning_rate": logger_values.get("train/learning_rate"),
+            "n_updates": getattr(self.model, "_n_updates", None),
+        }
+        sections: list[tuple[str, list[tuple[str, Any]]]] = [
+            (
+                "rollout/",
+                [
+                    ("ep_len_mean", recent_length),
+                    ("ep_rew_mean", recent_reward),
+                ],
+            ),
+            (
+                "time/",
+                [
+                    ("episodes", getattr(self.model, "_episode_num", None)),
+                    ("fps", fps),
+                    ("time_elapsed", int(elapsed)),
+                    ("total_timesteps", int(self.num_timesteps)),
+                ],
+            ),
+            (
+                "train/",
+                [
+                    (key, value)
+                    for key, value in train_values.items()
+                    if value is not None
+                ],
+            ),
+        ]
+
+        rows: list[tuple[str, str]] = []
+        for section, metrics in sections:
+            rows.append((section, ""))
+            for key, value in metrics:
+                rows.append(
+                    (
+                        f"    {key}",
+                        self._format_metric(f"{section}{key}", value),
+                    )
+                )
+
+        key_width = max(len(key) for key, _ in rows)
+        value_width = max(12, max(len(value) for _, value in rows))
+        border = "-" * (key_width + value_width + 7)
+        print(border, flush=True)
+        for key, value in rows:
+            print(
+                f"| {key:<{key_width}} | {value:<{value_width}} |",
+                flush=True,
+            )
+        print(border, flush=True)
+
     def _report(self) -> None:
         elapsed = max(1e-9, time.monotonic() - self.started_at)
         trained_steps = max(0, int(self.num_timesteps) - self.start_steps)
@@ -147,16 +259,8 @@ class ProgressReporterCallback(BaseCallback):
         remaining_steps = max(0, self.target_steps - int(self.num_timesteps))
         eta_seconds = remaining_steps / fps if fps > 0 else 0.0
         percent = 100.0 * int(self.num_timesteps) / max(1, self.target_steps)
-        recent_reward = (
-            sum(self.episode_rewards) / len(self.episode_rewards)
-            if self.episode_rewards
-            else None
-        )
-        recent_length = (
-            sum(self.episode_lengths) / len(self.episode_lengths)
-            if self.episode_lengths
-            else None
-        )
+        recent_reward = self._mean(self.episode_rewards)
+        recent_length = self._mean(self.episode_lengths)
         reward_text = (
             f" recent_ep_rew_mean={recent_reward:.3f}"
             f" recent_ep_len_mean={recent_length:.1f}"
@@ -178,6 +282,13 @@ class ProgressReporterCallback(BaseCallback):
             recent_reward=recent_reward,
             recent_length=recent_length,
         )
+        if self.metric_table:
+            self._print_metric_table(
+                elapsed=elapsed,
+                fps=fps,
+                recent_reward=recent_reward,
+                recent_length=recent_length,
+            )
 
     def _on_step(self) -> bool:
         self._collect_episode_info()
