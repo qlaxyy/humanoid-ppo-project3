@@ -98,22 +98,22 @@ Copy the final policy run directory from Google Drive if it is not already in
 the local `runs/` folder. The final policy is:
 
 ```text
-runs/colab_sac_cpu_probe_200k_seed3407/models/checkpoint_model_4000000_steps.zip
+runs/local_sac_cpu_5m_seed3407/models/checkpoint_model_5000000_steps.zip
 ```
 
 Then run:
 
 ```powershell
 python evaluate.py `
-  --run-dir runs/colab_sac_cpu_probe_200k_seed3407 `
-  --checkpoint-step 4000000 `
+  --run-dir runs/local_sac_cpu_5m_seed3407 `
+  --checkpoint-step 5000000 `
   --seeds 0 1 2 3 4 5 6 7 8 9 `
   --episodes-per-seed 1 `
   --device cpu
 
 python test.py `
-  --run-dir runs/colab_sac_cpu_probe_200k_seed3407 `
-  --checkpoint-step 4000000 `
+  --run-dir runs/local_sac_cpu_5m_seed3407 `
+  --checkpoint-step 5000000 `
   --seed 123 `
   --episodes 1 `
   --device cpu
@@ -125,6 +125,6 @@ Record these items:
 
 - Environment version check with `smoke_test.py`.
 - Local training command starting and printing progress lines.
-- Existing final policy file in `runs/colab_sac_cpu_probe_200k_seed3407/models/`.
+- Existing final policy file in `runs/local_sac_cpu_5m_seed3407/models/`.
 - Final evaluation commands and raw reward output.
 - Optional rendered Humanoid video generated from the final policy.

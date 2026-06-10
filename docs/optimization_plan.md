@@ -335,10 +335,25 @@ checkpoint_sweep_max_reward: 6809.433
 checkpoint_sweep_mean_length: 1000.0
 ```
 
-This is the strongest checkpoint sweep result so far. It should replace the
-current SAC 4.0M final candidate only after formal 10-seed evaluation with:
+This was the strongest checkpoint sweep result so far. Formal 10-seed
+evaluation confirmed that it should replace the current SAC 4.0M final
+candidate:
+
+```text
+checkpoint_step: 5000000
+mean_reward: 6780.676
+std_reward: 24.244
+min_reward: 6753.711
+max_reward: 6817.721
+mean_length: 1000.0
+seed_123_reward: 6780.809
+```
+
+Reproduction commands:
 
 ```bash
 python evaluate.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seeds 0 1 2 3 4 5 6 7 8 9 --episodes-per-seed 1 --device cpu
 python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
 ```
+
+Conclusion: the local SAC 5.0M checkpoint is the current final candidate.
