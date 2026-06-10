@@ -84,12 +84,12 @@ python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoin
 Render latest trajectory:
 
 ```bash
-python render_latest_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --backend egl --fps 20
+python render_latest_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --fps 20
 ```
 
-If running locally on Windows and `egl` fails, use the already exported
-trajectory on Colab, or simply submit the terminal/result recording and
-screenshots.
+On Windows the renderer now falls back to `glfw` automatically. If you want to
+force it explicitly, add `--backend glfw`. On Colab/Linux, `egl` is still the
+preferred backend.
 
 The generated video should be under:
 

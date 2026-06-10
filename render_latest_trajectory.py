@@ -11,7 +11,7 @@ def parse_args() -> argparse.Namespace:
         description="Render the latest exported trajectory under a run directory."
     )
     parser.add_argument("--run-dir", type=Path, required=True)
-    parser.add_argument("--backend", choices=["egl", "osmesa", "glfw"], default="egl")
+    parser.add_argument("--backend", choices=["egl", "osmesa", "glfw"], default=None)
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument("--repeat", type=int, default=1)
@@ -33,13 +33,13 @@ def main() -> int:
         "render_trajectory.py",
         "--trajectory",
         str(trajectory),
-        "--backend",
-        args.backend,
         "--fps",
         str(args.fps),
         "--repeat",
         str(args.repeat),
     ]
+    if args.backend is not None:
+        command.extend(["--backend", args.backend])
     if args.max_steps is not None:
         command.extend(["--max-steps", str(args.max_steps)])
     if args.frames_only:

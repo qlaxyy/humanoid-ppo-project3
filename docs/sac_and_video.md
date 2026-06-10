@@ -117,7 +117,7 @@ rendering into two processes:
 
 ```bash
 python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --max-steps 80
-python render_trajectory.py --trajectory runs/local_sac_cpu_5m_seed3407/trajectories/<trajectory_file>.npz --backend egl
+python render_trajectory.py --trajectory runs/local_sac_cpu_5m_seed3407/trajectories/<trajectory_file>.npz
 ```
 
 The second script does not import Stable-Baselines3 or load the neural-network
@@ -129,14 +129,17 @@ For a full policy episode, export without `--max-steps`:
 
 ```bash
 python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
-python render_latest_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --backend egl --fps 10
+python render_latest_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --fps 10
 ```
 
 For a longer visual demonstration, repeat the latest exported trajectory:
 
 ```bash
-python render_latest_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --backend egl --fps 10 --repeat 3
+python render_latest_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --fps 10 --repeat 3
 ```
+
+On Windows, the renderer now falls back to `glfw` automatically when no backend
+is specified. If you want to force it explicitly, add `--backend glfw`.
 
 For the assignment's requested five-minute process videos, screen-recording the
 Colab notebook while running the training/evaluation commands is more suitable

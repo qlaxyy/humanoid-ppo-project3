@@ -17,7 +17,21 @@ def requested_backend(argv: list[str]) -> str | None:
     return None
 
 
-os.environ.setdefault("MUJOCO_GL", requested_backend(sys.argv) or "egl")
+def default_backend() -> str:
+    if sys.platform.startswith("win"):
+        return "glfw"
+    return "egl"
+
+
+def resolved_backend(argv: list[str]) -> str:
+    backend = requested_backend(argv) or default_backend()
+    if sys.platform.startswith("win") and backend == "egl":
+        print("Windows detected; falling back from egl to glfw.", flush=True)
+        return "glfw"
+    return backend
+
+
+os.environ.setdefault("MUJOCO_GL", resolved_backend(sys.argv))
 
 import gymnasium as gym
 import imageio.v2 as imageio

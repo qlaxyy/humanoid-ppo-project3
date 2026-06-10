@@ -128,3 +128,11 @@ Record these items:
 - Existing final policy file in `runs/local_sac_cpu_5m_seed3407/models/`.
 - Final evaluation commands and raw reward output.
 - Optional rendered Humanoid video generated from the final policy.
+
+For the optional video, on Windows you can let the renderer auto-fallback to
+`glfw`, or force it explicitly:
+
+```bat
+python export_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
+python render_latest_trajectory.py --run-dir runs/local_sac_cpu_5m_seed3407 --backend glfw --fps 20
+```
