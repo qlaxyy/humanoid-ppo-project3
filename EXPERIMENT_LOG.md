@@ -7,6 +7,7 @@
 | template | YYYY-MM-DD | `<commit>` | `configs/ppo_humanoid_colab.json` | 3407 | 1000000 |  | 4 | 1250 | 250 | Colab GPU / CPU |  |  |
 | 20260604_091720_seed3407_ppo_humanoid | 2026-06-04 | `5d2748f` | `configs/ppo_humanoid_colab.json` | 3407 | 1000000 | 1000000 | 4 | 1250 | 250 | Colab GPU | 833.358 | Baseline PPO, seeds 0-4, mean length 156.2 |
 | 20260604_115101_seed3407_ppo_humanoid_colab | 2026-06-04 | `09e22f5` | `configs/ppo_humanoid_colab.json` | 3407 | 1000000 | 1000000 | 4 | 1250 | 250 | Colab GPU | 850.491 | Baseline PPO rerun, seeds 0-4, std 204.609, mean length 161.0, seed 123 reward 1239.427 |
+| 20260604_140725_seed3407_ppo_humanoid_stable | 2026-06-04 | `3cd7974` | `configs/ppo_humanoid_stable.json` | 3407 | 1000000 | 1000000 | 4 | 1250 | 250 | Colab T4 GPU | 753.044 | Stable PPO, seeds 0-4, std 95.806, mean length 135.0, seed 123 reward 818.042; worse than baseline |
 
 ## 记录规范
 
