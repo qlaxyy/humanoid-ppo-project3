@@ -78,6 +78,7 @@ def resolve_artifacts(args: argparse.Namespace, config: dict) -> tuple[Path, Pat
 
 def main() -> int:
     args = parse_args()
+    print(f"Using MUJOCO_GL={os.environ.get('MUJOCO_GL')}", flush=True)
     config = load_config(args.run_dir / "config.json")
     env_id = config.get("env_id", ASSIGNMENT_ENV_ID)
     model_path, vecnormalize_path = resolve_artifacts(args, config)
@@ -90,11 +91,13 @@ def main() -> int:
     stamp = timestamp_for_path()
     prefix = args.name_prefix or f"{args.run_dir.name}_seed{args.seed}_{stamp}"
 
+    print(f"Loading model: {model_path}", flush=True)
     model = load_model_for_config(model_path, config, device=args.device)
     normalizer = load_vecnormalize_for_inference(vecnormalize_path)
 
     results: list[EpisodeResult] = []
     video_paths: list[Path] = []
+    print(f"Creating {env_id} with render_mode=rgb_array", flush=True)
     env = gym.make(env_id, render_mode="rgb_array")
     try:
         env.action_space.seed(args.seed)
@@ -102,6 +105,7 @@ def main() -> int:
 
         for episode_index in range(args.episodes):
             episode_seed = args.seed + episode_index
+            print(f"Resetting episode {episode_index} with seed={episode_seed}", flush=True)
             obs, _ = env.reset(seed=episode_seed)
             total_reward = 0.0
             length = 0
@@ -111,6 +115,7 @@ def main() -> int:
             video_paths.append(video_path)
 
             with imageio.get_writer(str(video_path), fps=int(args.fps), macro_block_size=1) as writer:
+                print(f"Rendering first frame to {video_path}", flush=True)
                 writer.append_data(env.render())
 
                 while not (terminated or truncated):
@@ -124,6 +129,8 @@ def main() -> int:
                     total_reward += float(reward)
                     length += 1
                     writer.append_data(env.render())
+                    if length % 50 == 0:
+                        print(f"  wrote {length} frames", flush=True)
 
             results.append(
                 EpisodeResult(

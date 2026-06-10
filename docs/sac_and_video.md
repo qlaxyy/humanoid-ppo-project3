@@ -63,9 +63,14 @@ For the current final candidate:
 python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu
 ```
 
-On Colab, MuJoCo rendering should use a headless OpenGL backend. The script sets
-`MUJOCO_GL=egl` by default before importing Gymnasium. First record a short
-rendering probe:
+On Colab, MuJoCo rendering should use a headless OpenGL backend. First test
+whether the runtime can render one Humanoid frame:
+
+```bash
+python render_probe.py --backend egl --output videos/render_probe_egl.png
+```
+
+If that works, record a short model video:
 
 ```bash
 python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --max-steps 80
@@ -82,6 +87,7 @@ If EGL still hangs, try OSMesa after installing its runtime package in Colab:
 ```bash
 apt-get update
 apt-get install -y libosmesa6
+MUJOCO_GL=osmesa python render_probe.py --backend osmesa --output videos/render_probe_osmesa.png
 MUJOCO_GL=osmesa python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --backend osmesa --max-steps 80
 ```
 
