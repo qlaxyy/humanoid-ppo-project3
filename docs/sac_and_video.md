@@ -76,6 +76,10 @@ If that works, record a short model video:
 python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --max-steps 80
 ```
 
+The script writes mp4 files to a local `/content` temporary directory first,
+then copies the finished file to Drive. This avoids hangs caused by streaming
+ffmpeg output directly into Google Drive.
+
 If that works, record the full episode:
 
 ```bash
@@ -89,6 +93,12 @@ apt-get update
 apt-get install -y libosmesa6
 MUJOCO_GL=osmesa python render_probe.py --backend osmesa --output videos/render_probe_osmesa.png
 MUJOCO_GL=osmesa python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --backend osmesa --max-steps 80
+```
+
+If mp4 writing still fails, save PNG frames only:
+
+```bash
+python record_video.py --run-dir runs/20260605_081121_seed3407_ppo_humanoid_rlzoo_parallel --checkpoint-step 5000000 --seed 123 --episodes 1 --device cpu --max-steps 80 --frames-only
 ```
 
 General form:

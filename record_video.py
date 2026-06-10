@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import sys
+import tempfile
 from dataclasses import asdict
 from pathlib import Path
 
@@ -51,6 +53,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--backend", choices=["egl", "osmesa", "glfw"], default=None)
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--max-steps", type=int, default=None)
+    parser.add_argument("--local-video-workdir", type=Path, default=None)
+    parser.add_argument("--save-frame-every", type=int, default=0)
+    parser.add_argument("--frames-only", action="store_true")
     return parser.parse_args()
 
 
@@ -86,8 +91,13 @@ def main() -> int:
     if bool(config["normalize_observation"]) and vecnormalize_path is None:
         raise FileNotFoundError("VecNormalize statistics are required for this model.")
 
-    video_dir = args.video_dir or args.run_dir / "videos"
-    video_dir.mkdir(parents=True, exist_ok=True)
+    final_video_dir = args.video_dir or args.run_dir / "videos"
+    final_video_dir.mkdir(parents=True, exist_ok=True)
+    local_video_dir = Path(
+        args.local_video_workdir
+        or tempfile.mkdtemp(prefix="humanoid_video_", dir="/content" if Path("/content").exists() else None)
+    )
+    local_video_dir.mkdir(parents=True, exist_ok=True)
     stamp = timestamp_for_path()
     prefix = args.name_prefix or f"{args.run_dir.name}_seed{args.seed}_{stamp}"
 
@@ -111,12 +121,29 @@ def main() -> int:
             length = 0
             terminated = False
             truncated = False
-            video_path = video_dir / f"{prefix}-episode-{episode_index}.mp4"
-            video_paths.append(video_path)
+            local_video_path = local_video_dir / f"{prefix}-episode-{episode_index}.mp4"
+            final_video_path = final_video_dir / local_video_path.name
+            if not args.frames_only:
+                video_paths.append(final_video_path)
 
-            with imageio.get_writer(str(video_path), fps=int(args.fps), macro_block_size=1) as writer:
-                print(f"Rendering first frame to {video_path}", flush=True)
-                writer.append_data(env.render())
+            writer = None
+            if args.frames_only:
+                print("Recording PNG frames only; mp4 writer is disabled.", flush=True)
+            else:
+                writer = imageio.get_writer(
+                    str(local_video_path),
+                    fps=int(args.fps),
+                    macro_block_size=1,
+                )
+
+            try:
+                print(f"Rendering first frame for episode {episode_index}", flush=True)
+                frame = env.render()
+                if writer is not None:
+                    writer.append_data(frame)
+                if args.frames_only or args.save_frame_every:
+                    frame_path = final_video_dir / f"{prefix}-episode-{episode_index}-frame-0000.png"
+                    imageio.imwrite(frame_path, frame)
 
                 while not (terminated or truncated):
                     if args.max_steps is not None and length >= int(args.max_steps):
@@ -128,9 +155,23 @@ def main() -> int:
                     obs, reward, terminated, truncated, _ = env.step(action)
                     total_reward += float(reward)
                     length += 1
-                    writer.append_data(env.render())
+                    frame = env.render()
+                    if writer is not None:
+                        writer.append_data(frame)
+                    if args.frames_only or (
+                        args.save_frame_every and length % int(args.save_frame_every) == 0
+                    ):
+                        frame_path = final_video_dir / f"{prefix}-episode-{episode_index}-frame-{length:04d}.png"
+                        imageio.imwrite(frame_path, frame)
                     if length % 50 == 0:
                         print(f"  wrote {length} frames", flush=True)
+            finally:
+                if writer is not None:
+                    writer.close()
+
+            if not args.frames_only:
+                print(f"Copying video to {final_video_path}", flush=True)
+                shutil.copy2(local_video_path, final_video_path)
 
             results.append(
                 EpisodeResult(
@@ -156,10 +197,11 @@ def main() -> int:
         "mujoco_gl": os.environ.get("MUJOCO_GL"),
         "fps": args.fps,
         "max_steps": args.max_steps,
+        "frames_only": bool(args.frames_only),
         "results": [asdict(result) for result in results],
         "videos": [str(path) for path in video_paths],
     }
-    summary_path = video_dir / f"{prefix}_summary.json"
+    summary_path = final_video_dir / f"{prefix}_summary.json"
     write_json(summary_path, payload)
 
     for result in results:
