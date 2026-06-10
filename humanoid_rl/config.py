@@ -37,6 +37,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "ent_coef": 0.0,
         "vf_coef": 0.5,
         "max_grad_norm": 0.5,
+        "target_kl": None,
         "policy_net_arch": [256, 256],
         "value_net_arch": [256, 256],
     },

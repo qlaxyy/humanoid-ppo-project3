@@ -15,7 +15,8 @@
 
 ```text
 .
-├── configs/ppo_humanoid_colab.json  # 默认训练配置
+├── configs/ppo_humanoid_colab.json  # 默认 PPO baseline 配置
+├── configs/ppo_humanoid_stable.json # 更保守的 PPO 对比配置
 ├── humanoid_rl/                     # 可复现训练、环境、评估工具
 ├── train.py                         # 训练与断点续训
 ├── evaluate.py                      # 多 seed 原始奖励评估
@@ -60,10 +61,16 @@ python smoke_test.py --steps 5 --no-strict-versions
 4. 运行 `notebooks/colab_train.ipynb` 里的命令。
 5. 训练产物保存在 Google Drive 的项目目录内，避免 Colab 断线后丢失。
 
-Colab 中常用命令：
+Colab 中常用命令。第一次先跑 baseline：
 
 ```bash
 python train.py --config configs/ppo_humanoid_colab.json --target-steps 1000000 --device auto
+```
+
+如果 baseline 日志里 `approx_kl` 和 `clip_fraction` 偏高，可以再跑一个更保守的 PPO 对比实验：
+
+```bash
+python train.py --config configs/ppo_humanoid_stable.json --target-steps 1000000 --device auto
 ```
 
 继续训练到作业允许的上限：
@@ -86,6 +93,12 @@ python evaluate.py --run-dir runs/<run_name> --seeds 0 1 2 3 4 --episodes-per-se
 
 ```bash
 python test.py --run-dir runs/<run_name> --seed 123 --episodes 1
+```
+
+汇总所有已经评估过的实验：
+
+```bash
+python summarize_experiments.py
 ```
 
 如果需要可视化：
@@ -114,6 +127,19 @@ python test.py --run-dir runs/<run_name> --seed 123 --render-mode human
 - `runs/<run_name>/evaluations/*.json`
 - `runs/<run_name>/evaluations/*.csv`
 
+## GitHub 同步
+
+本地修改代码后：
+
+```bash
+git status
+git add <changed-files>
+git commit -m "Describe the change"
+git push
+```
+
+更多解释见 `docs/git_workflow.md`。
+
 ## 作业合规重点
 
 - 不修改 MuJoCo 原生物理参数。
@@ -122,4 +148,3 @@ python test.py --run-dir runs/<run_name> --seed 123 --render-mode human
 - 使用归一化时，模型和 `vecnormalize_latest.pkl` 必须一起提交。
 - `test.py` 支持通过命令行设置 seed。
 - 最终报告分数应来自原始环境累计 reward。
-

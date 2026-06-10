@@ -8,6 +8,8 @@
 - 最大环境交互步数：`5,000,000`
 - 默认算法：PPO
 - 默认归一化：observation 和 reward 都在训练时归一化
+- 默认 baseline 不启用 `target_kl`
+- 稳定版 PPO 配置启用 `target_kl=0.05`，并降低 learning rate 和 n_epochs
 
 ## 随机性来源
 
@@ -71,6 +73,9 @@ pip install -r requirements.txt
 python smoke_test.py --steps 5
 python train.py --config configs/ppo_humanoid_colab.json --target-steps 1000000
 python evaluate.py --run-dir runs/<run_id> --seeds 0 1 2 3 4
+python train.py --config configs/ppo_humanoid_stable.json --target-steps 1000000
+python evaluate.py --run-dir runs/<stable_run_id> --seeds 0 1 2 3 4
+python summarize_experiments.py
 python train.py --resume-from runs/<run_id> --target-steps 5000000
 python evaluate.py --run-dir runs/<run_id> --seeds 0 1 2 3 4 5 6 7 8 9
 ```
@@ -84,4 +89,3 @@ python evaluate.py --run-dir runs/<run_id> --seeds 0 1 2 3 4 5 6 7 8 9
 - `vecnormalize_latest.pkl` 存在
 - `test.py --seed <seed>` 可以运行
 - 报告中的分数来自 `evaluate.py` 或 `test.py` 的原始 reward
-

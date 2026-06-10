@@ -53,6 +53,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ent-coef", type=float, default=None)
     parser.add_argument("--vf-coef", type=float, default=None)
     parser.add_argument("--max-grad-norm", type=float, default=None)
+    parser.add_argument("--target-kl", type=float, default=None)
     parser.add_argument("--progress-bar", action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args()
 
@@ -85,6 +86,7 @@ def apply_overrides(config: dict[str, Any], args: argparse.Namespace) -> dict[st
         "ent_coef": args.ent_coef,
         "vf_coef": args.vf_coef,
         "max_grad_norm": args.max_grad_norm,
+        "target_kl": args.target_kl,
     }
     for key, value in ppo_overrides.items():
         if value is not None:
@@ -111,7 +113,8 @@ def create_or_resume_run_dir(config: dict[str, Any], args: argparse.Namespace) -
         return run_dir
 
     output_dir = Path(config["output_dir"])
-    run_name = args.run_name or f"{timestamp_for_path()}_seed{config['seed']}_ppo_humanoid"
+    config_label = (args.config.stem if args.config is not None else "ppo_humanoid")
+    run_name = args.run_name or f"{timestamp_for_path()}_seed{config['seed']}_{config_label}"
     run_dir = output_dir / run_name
     if run_dir.exists():
         raise FileExistsError(f"Run directory already exists: {run_dir}")
@@ -150,6 +153,7 @@ def build_model(config: dict[str, Any], train_env, tensorboard_dir: Path) -> PPO
         ent_coef=float(ppo["ent_coef"]),
         vf_coef=float(ppo["vf_coef"]),
         max_grad_norm=float(ppo["max_grad_norm"]),
+        target_kl=ppo.get("target_kl"),
         policy_kwargs=policy_kwargs,
         seed=int(config["seed"]),
         device=config["device"],

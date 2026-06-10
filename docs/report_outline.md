@@ -22,7 +22,7 @@
 
 - 算法：PPO
 - 策略网络和值函数网络结构
-- 关键超参数：learning rate、gamma、gae_lambda、clip_range、n_steps、batch_size、n_envs
+- 关键超参数：learning rate、gamma、gae_lambda、clip_range、target_kl、n_steps、batch_size、n_envs
 - 观测和奖励归一化方法
 - 断点保存和恢复机制
 
@@ -38,6 +38,7 @@
 ## 5. 实验结果
 
 - 不同步数的平均原始 reward
+- PPO baseline 与稳定版 PPO 的对比
 - 多 seed 评估表
 - 最终分数截图
 - 训练曲线截图，可来自 TensorBoard
@@ -55,4 +56,3 @@
 - 给出最终使用模型路径
 - 给出评估命令
 - 给出最终 raw reward 分数
-
