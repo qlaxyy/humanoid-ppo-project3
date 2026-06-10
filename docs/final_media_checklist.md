@@ -69,6 +69,9 @@ python test.py --run-dir runs/local_sac_cpu_5m_seed3407 --checkpoint-step 500000
 
 4. Optional policy walking video, about 1-2 minutes.
 
+Use `docs/video_explanation.md` as the written explanation for why the training
+video is segmented and why the final tail section is represented by screenshots.
+
 ## Optional Walking Video
 
 The assignment notice mainly asks for segmented training/result recording. A
