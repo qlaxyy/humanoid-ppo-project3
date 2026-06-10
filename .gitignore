@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Local and generated experiment artifacts
+runs/*
+!runs/.gitkeep
+logs/*
+!logs/.gitkeep
+models/*
+!models/.gitkeep
+videos/*
+!videos/.gitkeep
+submissions/*
+!submissions/.gitkeep
+
+# Notebook/runtime noise
+.ipynb_checkpoints/
+
+# Large/generated report artifacts are kept out of source control by default.
+# Track Markdown sources and commit final submission files only if intentionally needed.
+*.pdf
+*.mp4
+*.avi
+*.mov
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+
