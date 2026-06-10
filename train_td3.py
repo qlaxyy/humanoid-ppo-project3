@@ -44,6 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-episodes", type=int, default=None)
     parser.add_argument("--log-interval", type=int, default=None)
     parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--verbose", action="store_true")
     parser.add_argument(
         "--status-freq",
         type=int,
@@ -119,6 +120,8 @@ def apply_overrides(config: dict[str, Any], args: argparse.Namespace) -> dict[st
     config["vec_env"] = "dummy"
     if args.quiet:
         config["verbose"] = 0
+    elif args.verbose:
+        config["verbose"] = 1
     return config
 
 
