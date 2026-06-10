@@ -252,9 +252,10 @@ def main() -> int:
     previous_metadata = read_json(metadata_path, default={}) or {}
     metadata_steps = int(previous_metadata.get("last_num_timesteps", 0))
     if args.resume_from is not None and metadata_steps and model_steps != metadata_steps:
-        raise ValueError(
-            f"Resume artifact mismatch: model has {model_steps} steps but "
-            f"metadata records {metadata_steps}."
+        print(
+            f"[warning] Resume artifact mismatch: model has {model_steps} steps but "
+            f"metadata records {metadata_steps}. Continuing from model steps.",
+            file=sys.stderr,
         )
     current_steps = model_steps or metadata_steps
     target_steps = int(config["target_steps"])

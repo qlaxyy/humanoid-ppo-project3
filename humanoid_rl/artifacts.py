@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -39,33 +40,48 @@ def checkpoint_artifacts(
 
 def find_resume_artifacts(run_dir: Path) -> tuple[Path, Path | None]:
     models_dir = run_dir / "models"
-    model_path = models_dir / "latest_model.zip"
-    if model_path.exists():
-        vecnormalize_path = models_dir / "vecnormalize_latest.pkl"
-        return model_path, vecnormalize_path if vecnormalize_path.exists() else None
-
     checkpoints = sorted(
         models_dir.glob("checkpoint_model_*_steps.zip"),
         key=checkpoint_step,
     )
-    if not checkpoints:
+    if checkpoints:
+        metadata_path = run_dir / "metadata.json"
+        metadata_steps = None
+        if metadata_path.exists():
+            with metadata_path.open("r", encoding="utf-8") as f:
+                metadata_steps = int(json.load(f).get("last_num_timesteps", 0))
+
+        if metadata_steps:
+            matching_checkpoint = (
+                models_dir / f"checkpoint_model_{metadata_steps}_steps.zip"
+            )
+            model_path = (
+                matching_checkpoint if matching_checkpoint.exists() else checkpoints[-1]
+            )
+        else:
+            model_path = checkpoints[-1]
+
+        steps = checkpoint_step(model_path)
+        vecnormalize_candidates = [
+            models_dir / f"checkpoint_model_vecnormalize_{steps}_steps.pkl",
+            models_dir / f"vecnormalize_{steps}_steps.pkl",
+            models_dir / "vecnormalize_latest.pkl",
+        ]
+        vecnormalize_path = next(
+            (path for path in vecnormalize_candidates if path.exists()),
+            None,
+        )
+        print(f"Resuming from checkpoint: {model_path}")
+        if vecnormalize_path is not None:
+            print(f"Loading VecNormalize statistics: {vecnormalize_path}")
+        return model_path, vecnormalize_path
+
+    model_path = models_dir / "latest_model.zip"
+    if not model_path.exists():
         raise FileNotFoundError(
             "No resume model found. Expected latest_model.zip or "
             f"checkpoint_model_*_steps.zip under {models_dir}."
         )
 
-    model_path = checkpoints[-1]
-    steps = checkpoint_step(model_path)
-    vecnormalize_candidates = [
-        models_dir / f"checkpoint_model_vecnormalize_{steps}_steps.pkl",
-        models_dir / f"vecnormalize_{steps}_steps.pkl",
-        models_dir / "vecnormalize_latest.pkl",
-    ]
-    vecnormalize_path = next(
-        (path for path in vecnormalize_candidates if path.exists()),
-        None,
-    )
-    print(f"Resuming from checkpoint: {model_path}")
-    if vecnormalize_path is not None:
-        print(f"Loading VecNormalize statistics: {vecnormalize_path}")
-    return model_path, vecnormalize_path
+    vecnormalize_path = models_dir / "vecnormalize_latest.pkl"
+    return model_path, vecnormalize_path if vecnormalize_path.exists() else None
