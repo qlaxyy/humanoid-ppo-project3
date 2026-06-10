@@ -9,6 +9,7 @@ import numpy as np
 from stable_baselines3 import PPO
 
 from humanoid_rl import ASSIGNMENT_ENV_ID
+from humanoid_rl.artifacts import checkpoint_artifacts
 from humanoid_rl.config import load_config
 from humanoid_rl.evaluation import (
     load_vecnormalize_for_inference,
@@ -25,6 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--model-path", type=Path, default=None)
     parser.add_argument("--vecnormalize-path", type=Path, default=None)
+    parser.add_argument("--checkpoint-step", type=int, default=None)
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
     parser.add_argument("--episodes-per-seed", type=int, default=1)
     parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
@@ -38,8 +40,16 @@ def main() -> int:
     run_dir = args.run_dir
     config = load_config(run_dir / "config.json")
 
-    model_path = args.model_path or run_dir / "models" / "latest_model.zip"
-    vecnormalize_path = args.vecnormalize_path or run_dir / "models" / "vecnormalize_latest.pkl"
+    if args.checkpoint_step is not None:
+        if args.model_path is not None or args.vecnormalize_path is not None:
+            raise ValueError(
+                "--checkpoint-step cannot be combined with --model-path or "
+                "--vecnormalize-path."
+            )
+        model_path, vecnormalize_path = checkpoint_artifacts(run_dir, args.checkpoint_step)
+    else:
+        model_path = args.model_path or run_dir / "models" / "latest_model.zip"
+        vecnormalize_path = args.vecnormalize_path or run_dir / "models" / "vecnormalize_latest.pkl"
     if not model_path.exists():
         raise FileNotFoundError(f"Model not found: {model_path}")
     if bool(config["normalize_observation"]) and not vecnormalize_path.exists():
@@ -110,4 +120,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

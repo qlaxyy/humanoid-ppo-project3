@@ -124,6 +124,13 @@ python evaluate_checkpoints.py --run-dir runs/<run_name> --every 500000 --seeds 
 python evaluate_checkpoints.py --run-dir runs/<run_name> --steps 1000000 1500000 2000000 --seeds 0 1 2 3 4
 ```
 
+确定最佳 checkpoint 后，可以直接用步数评估或测试：
+
+```bash
+python evaluate.py --run-dir runs/<run_name> --checkpoint-step 4500000 --seeds 0 1 2 3 4 5 6 7 8 9
+python test.py --run-dir runs/<run_name> --checkpoint-step 4500000 --seed 123 --episodes 1
+```
+
 如果需要可视化：
 
 ```bash
