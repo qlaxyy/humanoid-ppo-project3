@@ -55,6 +55,10 @@ def run_summary(run_dir: Path) -> dict[str, Any] | None:
 
 def format_value(value: Any) -> str:
     if isinstance(value, float):
+        if 0 < abs(value) < 0.001:
+            return f"{value:.2e}"
+        if 0 < abs(value) < 0.01:
+            return f"{value:.4f}"
         return f"{value:.3f}"
     if value is None:
         return ""
@@ -111,4 +115,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
