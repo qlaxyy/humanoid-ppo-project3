@@ -55,22 +55,31 @@ python smoke_test.py --steps 5 --no-strict-versions
 
 推荐工作流：
 
-1. 在本机 VS Code 修改代码。
-2. 把整个项目文件夹上传到 Google Drive，或同步到 GitHub 后在 Colab 克隆。
-3. 在 Colab 使用 GPU runtime。
-4. 运行 `notebooks/colab_train.ipynb` 里的命令。
-5. 训练产物保存在 Google Drive 的项目目录内，避免 Colab 断线后丢失。
+1. 在本机 VS Code 修改代码，并 push 到 GitHub。
+2. 在 Colab 使用 GPU runtime。
+3. 每次新 runtime 把代码 clone 到 `/content`，这是临时盘但速度快。
+4. 把训练产物保存到 Google Drive，例如 `/content/drive/MyDrive/humanoid_runs`。
+5. Colab 断线后重新 clone 代码、安装依赖，再从 Drive 中的 run 目录恢复。
 
-Colab 中常用命令。第一次先跑 baseline：
+Colab 中常用命令。每次新 runtime 先准备代码和依赖：
 
 ```bash
-python train.py --config configs/ppo_humanoid_colab.json --target-steps 1000000 --device auto
+git clone https://github.com/qlaxyy/humanoid-ppo-project3.git /content/humanoid-ppo-project3-code
+cd /content/humanoid-ppo-project3-code
+pip install -r requirements.txt
+python smoke_test.py --steps 5
+```
+
+第一次先跑 baseline，并把输出保存到 Drive：
+
+```bash
+python train.py --config configs/ppo_humanoid_colab.json --target-steps 1000000 --device auto --output-dir /content/drive/MyDrive/humanoid_runs
 ```
 
 如果 baseline 日志里 `approx_kl` 和 `clip_fraction` 偏高，可以再跑一个更保守的 PPO 对比实验：
 
 ```bash
-python train.py --config configs/ppo_humanoid_stable.json --target-steps 1000000 --device auto
+python train.py --config configs/ppo_humanoid_stable.json --target-steps 1000000 --device auto --output-dir /content/drive/MyDrive/humanoid_runs
 ```
 
 继续训练到作业允许的上限：
@@ -79,6 +88,8 @@ python train.py --config configs/ppo_humanoid_stable.json --target-steps 1000000
 python train.py --resume-from runs/<run_name> --target-steps 5000000 --device auto
 ```
 
+如果训练中途断线，`train.py --resume-from` 会优先加载 `latest_model.zip`；如果训练没有正常结束，则自动寻找 `models/checkpoint_model_*_steps.zip` 和对应的 VecNormalize 统计量。
+
 注意：默认配置的 `n_envs=4`、`n_steps=1250`，每个 PPO rollout 是 `5000` 步，能整除 `1,000,000` 和 `5,000,000`，避免 PPO 自动向上采样导致超过作业步数限制。
 
 ## 评估和测试
@@ -86,19 +97,19 @@ python train.py --resume-from runs/<run_name> --target-steps 5000000 --device au
 多随机种子评估，结果会写入 `runs/<run_name>/evaluations/`：
 
 ```bash
-python evaluate.py --run-dir runs/<run_name> --seeds 0 1 2 3 4 --episodes-per-seed 1
+python evaluate.py --run-dir /content/drive/MyDrive/humanoid_runs/<run_name> --seeds 0 1 2 3 4 --episodes-per-seed 1
 ```
 
 单次测试，显式把命令行 seed 传给 `env.reset(seed=...)`：
 
 ```bash
-python test.py --run-dir runs/<run_name> --seed 123 --episodes 1
+python test.py --run-dir /content/drive/MyDrive/humanoid_runs/<run_name> --seed 123 --episodes 1
 ```
 
 汇总所有已经评估过的实验：
 
 ```bash
-python summarize_experiments.py
+python summarize_experiments.py --runs-dir /content/drive/MyDrive/humanoid_runs
 ```
 
 如果需要可视化：

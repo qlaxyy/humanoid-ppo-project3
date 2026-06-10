@@ -71,13 +71,13 @@ obs, reward, terminated, truncated, info = env.step(action)
 ```bash
 pip install -r requirements.txt
 python smoke_test.py --steps 5
-python train.py --config configs/ppo_humanoid_colab.json --target-steps 1000000
-python evaluate.py --run-dir runs/<run_id> --seeds 0 1 2 3 4
-python train.py --config configs/ppo_humanoid_stable.json --target-steps 1000000
-python evaluate.py --run-dir runs/<stable_run_id> --seeds 0 1 2 3 4
-python summarize_experiments.py
-python train.py --resume-from runs/<run_id> --target-steps 5000000
-python evaluate.py --run-dir runs/<run_id> --seeds 0 1 2 3 4 5 6 7 8 9
+python train.py --config configs/ppo_humanoid_colab.json --target-steps 1000000 --output-dir /content/drive/MyDrive/humanoid_runs
+python evaluate.py --run-dir /content/drive/MyDrive/humanoid_runs/<run_id> --seeds 0 1 2 3 4
+python train.py --config configs/ppo_humanoid_stable.json --target-steps 1000000 --output-dir /content/drive/MyDrive/humanoid_runs
+python evaluate.py --run-dir /content/drive/MyDrive/humanoid_runs/<stable_run_id> --seeds 0 1 2 3 4
+python summarize_experiments.py --runs-dir /content/drive/MyDrive/humanoid_runs
+python train.py --resume-from /content/drive/MyDrive/humanoid_runs/<run_id> --target-steps 5000000
+python evaluate.py --run-dir /content/drive/MyDrive/humanoid_runs/<run_id> --seeds 0 1 2 3 4 5 6 7 8 9
 ```
 
 ## 提交前检查

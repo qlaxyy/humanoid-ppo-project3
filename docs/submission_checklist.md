@@ -15,6 +15,7 @@
 
 - `runs/<run_id>/models/latest_model.zip`
 - `runs/<run_id>/models/vecnormalize_latest.pkl`
+- 如果训练被中断，可以先用 `train.py --resume-from <run_dir>` 从最新 checkpoint 恢复，再生成最终 `latest_model.zip`
 - `runs/<run_id>/config.json`
 - `runs/<run_id>/metadata.json`
 - `runs/<run_id>/evaluations/raw_eval_*.json`
@@ -46,4 +47,3 @@
 
 - 命名：`学号-姓名-大作业3`
 - 内容包含报告、完整源代码、模型及归一化参数、分数截图、录屏材料
-

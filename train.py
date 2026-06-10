@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -122,13 +123,45 @@ def create_or_resume_run_dir(config: dict[str, Any], args: argparse.Namespace) -
     return run_dir
 
 
-def find_resume_artifacts(run_dir: Path) -> tuple[Path, Path | None]:
-    model_path = run_dir / "models" / "latest_model.zip"
-    if not model_path.exists():
-        raise FileNotFoundError(f"Missing resume model: {model_path}")
+def checkpoint_step(path: Path) -> int:
+    match = re.search(r"_(\d+)_steps\.zip$", path.name)
+    return int(match.group(1)) if match else -1
 
-    vecnormalize_path = run_dir / "models" / "vecnormalize_latest.pkl"
-    return model_path, vecnormalize_path if vecnormalize_path.exists() else None
+
+def find_resume_artifacts(run_dir: Path) -> tuple[Path, Path | None]:
+    models_dir = run_dir / "models"
+    model_path = models_dir / "latest_model.zip"
+    if model_path.exists():
+        vecnormalize_path = models_dir / "vecnormalize_latest.pkl"
+        return model_path, vecnormalize_path if vecnormalize_path.exists() else None
+
+    checkpoints = sorted(
+        models_dir.glob("checkpoint_model_*_steps.zip"),
+        key=checkpoint_step,
+    )
+    if not checkpoints:
+        raise FileNotFoundError(
+            "No resume model found. Expected latest_model.zip or "
+            f"checkpoint_model_*_steps.zip under {models_dir}."
+        )
+
+    model_path = checkpoints[-1]
+    steps = checkpoint_step(model_path)
+    vecnormalize_candidates = [
+        models_dir / f"checkpoint_model_vecnormalize_{steps}_steps.pkl",
+        models_dir / f"vecnormalize_{steps}_steps.pkl",
+        models_dir / "vecnormalize_latest.pkl",
+    ]
+    vecnormalize_path = next(
+        (path for path in vecnormalize_candidates if path.exists()),
+        None,
+    )
+    print(f"Resuming from checkpoint: {model_path}")
+    if vecnormalize_path is not None:
+        print(f"Loading VecNormalize statistics: {vecnormalize_path}")
+    else:
+        print("[warning] No VecNormalize statistics found for resume.", file=sys.stderr)
+    return model_path, vecnormalize_path
 
 
 def build_model(config: dict[str, Any], train_env, tensorboard_dir: Path) -> PPO:
@@ -185,6 +218,14 @@ def main() -> int:
     resume_vecnormalize_path: Path | None = None
     if args.resume_from is not None:
         resume_model_path, resume_vecnormalize_path = find_resume_artifacts(run_dir)
+        if (
+            bool(config["normalize_observation"]) or bool(config["normalize_reward"])
+        ) and resume_vecnormalize_path is None:
+            raise FileNotFoundError(
+                "Resume requires VecNormalize statistics because normalization is "
+                "enabled. Check the run's models/ directory for "
+                "vecnormalize_latest.pkl or checkpoint_model_vecnormalize_*_steps.pkl."
+            )
 
     train_env = make_vector_env(
         env_id=config["env_id"],
